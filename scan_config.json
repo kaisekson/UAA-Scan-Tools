@@ -1,0 +1,27 @@
+{
+  "hexapod": {
+    "ip": "192.168.1.10",
+    "port": 50000
+  },
+  "smu": {
+    "ip": "192.168.1.100",
+    "port": 5025,
+    "channel": "a",
+    "voltage": 5.0,
+    "current_limit_a": 0.001,
+    "nplc": 1.0
+  },
+  "scan": {
+    "y_start_um": 0.0,
+    "y_end_um": 500.0,
+    "y_step_um": 10.0,
+    "z_start_um": 0.0,
+    "z_end_um": -1100.0,
+    "z_step_um": -1.0,
+    "settle_time_s": 0.05,
+    "stop_current_ua": 1.0
+  },
+  "output": {
+    "csv_dir": "./results"
+  }
+}
