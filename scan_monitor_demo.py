@@ -1,5 +1,5 @@
 """
-Z-Y Scan Monitor  —  DEMO MODE
+Z-Y Scan Monitor  —  DEMO MODE TEST
 Requirements: pip install matplotlib
 """
 
