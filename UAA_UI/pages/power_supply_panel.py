@@ -8,6 +8,12 @@ Power Supply Panel — Multi PSU (สูงสุด 4 ตัว)
 """
 
 import socket, time, os
+try:
+    import requests
+    HAS_REQUESTS = True
+except ImportError:
+    HAS_REQUESTS = False
+from io import BytesIO
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
     QLabel, QLineEdit, QPushButton, QComboBox,
@@ -19,13 +25,20 @@ from core.widgets import lbl, divider
 
 MAX_PSU = 4
 
+# ── แก้ URL รูปได้ที่นี่ ──────────────────────────────────────────
 MODELS = {
-    "E36103B": {"brand":"Keysight","channels":1,"v_max":20.0,"i_max":3.0, "image":"assets/instruments/e36103b.png"},
-    "E36105B": {"brand":"Keysight","channels":1,"v_max":35.0,"i_max":1.5, "image":"assets/instruments/e36103b.png"},
-    "E36106B": {"brand":"Keysight","channels":1,"v_max":60.0,"i_max":1.0, "image":"assets/instruments/e36103b.png"},
-    "E36231A": {"brand":"Keysight","channels":2,"v_max":25.0,"i_max":1.0, "image":""},
-    "E36311A": {"brand":"Keysight","channels":3,"v_max":25.0,"i_max":1.0, "image":""},
-    "E36441A": {"brand":"Keysight","channels":4,"v_max":20.0,"i_max":1.0, "image":"assets/instruments/e36441a.png"},
+    "E36103B": {"brand":"Keysight","channels":1,"v_max":20.0,"i_max":3.0,
+                "image_url":"https://www.keysight.com/content/dam/keysight/en/img/prd/x/E36103B-front.png"},
+    "E36105B": {"brand":"Keysight","channels":1,"v_max":35.0,"i_max":1.5,
+                "image_url":"https://www.keysight.com/content/dam/keysight/en/img/prd/x/E36103B-front.png"},
+    "E36106B": {"brand":"Keysight","channels":1,"v_max":60.0,"i_max":1.0,
+                "image_url":"https://www.keysight.com/content/dam/keysight/en/img/prd/x/E36103B-front.png"},
+    "E36231A": {"brand":"Keysight","channels":2,"v_max":25.0,"i_max":1.0,
+                "image_url":""},
+    "E36311A": {"brand":"Keysight","channels":3,"v_max":25.0,"i_max":1.0,
+                "image_url":""},
+    "E36441A": {"brand":"Keysight","channels":4,"v_max":20.0,"i_max":1.0,
+                "image_url":"https://www.keysight.com/content/dam/keysight/en/img/prd/x/E36441A-front.png"},
 }
 
 
@@ -241,15 +254,16 @@ class SinglePSUWidget(QWidget):
     def set_remove_callback(self, cb):
         self._remove_cb = cb
 
-    def _on_model(self,model):
-        info=MODELS.get(model,{})
-        self.brand_lbl.setText(info.get("brand","—"))
-        img=info.get("image","")
-        if img and os.path.exists(img):
-            px=QPixmap(img).scaled(178,108,Qt.AspectRatioMode.KeepAspectRatio,Qt.TransformationMode.SmoothTransformation)
-            self.img_lbl.setPixmap(px); self.img_lbl.setText("")
+    def _on_model(self, model):
+        info = MODELS.get(model, {})
+        self.brand_lbl.setText(info.get("brand", "—"))
+        url  = info.get("image_url", "")
+        self.img_lbl.setPixmap(QPixmap())
+        self.img_lbl.setText("Loading...")
+        if url and HAS_REQUESTS:
+            self._load_image_async(model, url)
         else:
-            self.img_lbl.setPixmap(QPixmap()); self.img_lbl.setText(f"[ {model} ]")
+            self.img_lbl.setText(f"[ {model} ]")
         while self.ch_layout.count():
             w=self.ch_layout.takeAt(0).widget()
             if w: w.deleteLater()
@@ -296,8 +310,72 @@ class SinglePSUWidget(QWidget):
         self.conn_btn.setText("⟳  Connect")
         self.conn_btn.clicked.disconnect(); self.conn_btn.clicked.connect(self._connect)
 
+    def _load_image_async(self, model, url):
+        """ดึงรูปจาก URL ใน background thread"""
+        class ImgWorker(QThread):
+            done = pyqtSignal(bytes)
+            fail = pyqtSignal()
+            def __init__(self, u): super().__init__(); self.url = u
+            def run(self):
+                try:
+                    r = requests.get(self.url, timeout=5)
+                    if r.status_code == 200: self.done.emit(r.content)
+                    else: self.fail.emit()
+                except: self.fail.emit()
+
+        worker = ImgWorker(url)
+        def on_done(data):
+            px = QPixmap()
+            px.loadFromData(data)
+            if not px.isNull():
+                px = px.scaled(178, 108,
+                    Qt.AspectRatioMode.KeepAspectRatio,
+                    Qt.TransformationMode.SmoothTransformation)
+                self.img_lbl.setPixmap(px)
+                self.img_lbl.setText("")
+            else:
+                self.img_lbl.setText(f"[ {model} ]")
+        def on_fail():
+            self.img_lbl.setText(f"[ {model} ]")
+
+        worker.done.connect(on_done)
+        worker.fail.connect(on_fail)
+        worker.start()
+        self._img_worker = worker   # keep reference
+
     def _readback(self):
         for r in self._ch_rows: r.update_readback()
+
+    def get_settings(self):
+        """คืน dict ของ settings ตัวนี้"""
+        return {
+            "model":   self.model_cb.currentText(),
+            "ip":      self.ip_edit.text().strip(),
+            "port":    int(self.port_edit.text() or 5025),
+            "timeout": float(self.tmo_edit.text() or 3),
+            "channels": [
+                {
+                    "ch":      r._ch,
+                    "voltage": float(r.v_edit.text() or 0),
+                    "current": float(r.i_edit.text() or 0),
+                }
+                for r in self._ch_rows
+            ]
+        }
+
+    def load_settings(self, data):
+        """โหลด dict กลับมาใส่ field"""
+        if "model" in data:
+            idx = self.model_cb.findText(data["model"])
+            if idx >= 0: self.model_cb.setCurrentIndex(idx)
+        self.ip_edit.setText(data.get("ip", ""))
+        self.port_edit.setText(str(data.get("port", 5025)))
+        self.tmo_edit.setText(str(data.get("timeout", 3)))
+        for ch_data in data.get("channels", []):
+            ch = ch_data.get("ch", 1) - 1
+            if ch < len(self._ch_rows):
+                self._ch_rows[ch].v_edit.setText(str(ch_data.get("voltage", 0)))
+                self._ch_rows[ch].i_edit.setText(str(ch_data.get("current", 0)))
 
 
 class PowerSupplyPanel(QWidget):
@@ -354,26 +432,39 @@ class PowerSupplyPanel(QWidget):
 
     def _remove_psu(self, idx):
         if self._count <= 1:
-            return   # ต้องมีอย่างน้อย 1 ตัว
+            return
         self.tabs.removeTab(idx)
         self._count -= 1
-        # rename tabs ให้ถูกต้อง
         n = 1
         for i in range(self.tabs.count()):
             if self.tabs.tabText(i) != "＋":
-                self.tabs.setTabText(i, f"PSU {n}")
-                n += 1
+                self.tabs.setTabText(i, f"PSU {n}"); n += 1
         self._refresh_add_tab()
 
-    def _remove_psu(self, idx):
-        if self._count <= 1:
-            return   # ต้องมีอย่างน้อย 1 ตัว
-        self.tabs.removeTab(idx)
-        self._count -= 1
-        # rename tabs ให้ถูกต้อง
-        n = 1
+    def get_all_settings(self):
+        """คืน list ของ PSU settings ทุกตัว สำหรับ save"""
+        result = []
         for i in range(self.tabs.count()):
-            if self.tabs.tabText(i) != "＋":
-                self.tabs.setTabText(i, f"PSU {n}")
-                n += 1
+            if self.tabs.tabText(i) == "＋": continue
+            scroll = self.tabs.widget(i)
+            widget = scroll.widget()
+            result.append(widget.get_settings())
+        return result
+
+    def load_all_settings(self, psu_list):
+        """โหลด list ของ PSU settings กลับมาใส่ widget"""
+        if not psu_list: return
+        # ลบ PSU ทั้งหมดยกเว้น + tab
+        while self._count > 0:
+            for i in range(self.tabs.count()):
+                if self.tabs.tabText(i) != "＋":
+                    self.tabs.removeTab(i); self._count -= 1; break
+            else:
+                break
+        # สร้างใหม่ตาม list
+        for psu_data in psu_list[:MAX_PSU]:
+            self._add_psu()
+            scroll = self.tabs.widget(self._count - 1)
+            widget = scroll.widget()
+            widget.load_settings(psu_data)
         self._refresh_add_tab()

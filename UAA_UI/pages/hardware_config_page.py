@@ -129,6 +129,7 @@ class HardwareConfigPage(QWidget):
 
             if use_real and name == "Power Supply":
                 panel = PowerSupplyPanel()
+                self._psu_panel = panel
             else:
                 panel = EmptyPanel(name, color)
             self.stack.addWidget(panel)
@@ -158,6 +159,10 @@ class HardwareConfigPage(QWidget):
         body.addWidget(self.stack, 1)
         layout.addLayout(body)
 
+        # โหลด PSU settings ที่บันทึกไว้
+        if "power_supplies" in self.data and self.data["power_supplies"]:
+            self._psu_panel.load_all_settings(self.data["power_supplies"])
+
         # Select first tab by default
         if self._tabs:
             self._tabs[0][1].setChecked(True)
@@ -170,4 +175,7 @@ class HardwareConfigPage(QWidget):
         self.stack.setCurrentIndex(idx)
 
     def save_all(self):
+        # เก็บ PSU settings
+        self.data["power_supplies"] = self._psu_panel.get_all_settings()
         cfg.save(self.data)
+        print("[Config] Saved power supply settings")

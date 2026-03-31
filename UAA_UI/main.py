@@ -6,9 +6,7 @@ UAA Machine Control System
 Requirements:
     pip install PyQt6
 """
-import os, sys
-# ให้ working directory เป็น folder ของ main.py เสมอ
-os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
 import sys, datetime
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget,

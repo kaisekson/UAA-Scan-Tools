@@ -36,5 +36,48 @@
       "port": 50000,
       "enabled": true
     }
-  }
+  },
+  "power_supplies": [
+    {
+      "model": "E36441A",
+      "ip": "",
+      "port": 5025,
+      "timeout": 3.0,
+      "channels": [
+        {
+          "ch": 1,
+          "voltage": 0.0,
+          "current": 0.0
+        },
+        {
+          "ch": 2,
+          "voltage": 0.0,
+          "current": 0.0
+        },
+        {
+          "ch": 3,
+          "voltage": 0.0,
+          "current": 0.0
+        },
+        {
+          "ch": 4,
+          "voltage": 0.0,
+          "current": 0.0
+        }
+      ]
+    },
+    {
+      "model": "E36103B",
+      "ip": "",
+      "port": 5025,
+      "timeout": 3.0,
+      "channels": [
+        {
+          "ch": 1,
+          "voltage": 0.0,
+          "current": 0.0
+        }
+      ]
+    }
+  ]
 }
