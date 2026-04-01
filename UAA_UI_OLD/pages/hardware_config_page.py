@@ -5,7 +5,6 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt, pyqtSignal
 from core.widgets import lbl, divider
 from pages.power_supply_panel import PowerSupplyPanel
-from pages.hexapod_panel import HexapodPanel
 from core import settings as cfg
 
 
@@ -104,11 +103,10 @@ class HardwareConfigPage(QWidget):
         self._panels = []
 
         devices = [
-            ("Power Supply", "#3b82f6", True,  "psu"),
-            ("Hexapod",      "#4a9eff", True,  "hxp"),
-            ("SMU",          "#22c55e", False, ""),
-            ("Dispense",     "#a855f7", False, ""),
-            ("UV Cure",      "#eab308", False, ""),
+            ("Power Supply", "#3b82f6", True),
+            ("SMU",          "#22c55e"),
+            ("Dispense",     "#a855f7"),
+            ("UV Cure",      "#eab308"),
         ]
 
         from PyQt6.QtWidgets import QStackedWidget
@@ -122,20 +120,16 @@ class HardwareConfigPage(QWidget):
         """)
 
         for item in devices:
-            name     = item[0]; color = item[1]
-            use_real = item[2] if len(item) > 2 else False
-            key      = item[3] if len(item) > 3 else ""
+            name, color = item[0], item[1]
+            use_real    = item[2] if len(item) > 2 else False
             tab = DeviceTab(color, name)
             tab.clicked.connect(lambda _, n=name, c=color: self._select(n, c))
             self._tabs.append((name, tab))
             tab_col.addWidget(tab)
 
-            if use_real and key == "psu":
+            if use_real and name == "Power Supply":
                 panel = PowerSupplyPanel()
                 self._psu_panel = panel
-            elif use_real and key == "hxp":
-                panel = HexapodPanel()
-                self._hxp_panel = panel
             else:
                 panel = EmptyPanel(name, color)
             self.stack.addWidget(panel)
@@ -168,8 +162,6 @@ class HardwareConfigPage(QWidget):
         # โหลด PSU settings ที่บันทึกไว้
         if "power_supplies" in self.data and self.data["power_supplies"]:
             self._psu_panel.load_all_settings(self.data["power_supplies"])
-        if "hexapods" in self.data and self.data["hexapods"]:
-            self._hxp_panel.load_all_settings(self.data["hexapods"])
 
         # Select first tab by default
         if self._tabs:
@@ -185,6 +177,5 @@ class HardwareConfigPage(QWidget):
     def save_all(self):
         # เก็บ PSU settings
         self.data["power_supplies"] = self._psu_panel.get_all_settings()
-        self.data["hexapods"] = self._hxp_panel.get_all_settings()
         cfg.save(self.data)
         print("[Config] Saved power supply settings")
