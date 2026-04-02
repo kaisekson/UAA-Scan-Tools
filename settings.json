@@ -84,16 +84,32 @@
     {
       "ip": "",
       "port": 50000,
-      "orientation": "Vertical",
+      "orientation": "Horizontal Right",
       "step": 0.01,
       "velocity": 1.0
     },
     {
       "ip": "192.168.1.55",
       "port": 50000,
-      "orientation": "Vertical",
+      "orientation": "Horizontal Left",
       "step": 0.01,
       "velocity": 1.0
     }
-  ]
+  ],
+  "linear_stage": {
+    "ip": "192.168.1.10",
+    "port": 50000,
+    "step": 0.01,
+    "velocity": 1.0
+  },
+  "cartesian": {
+    "ip": "192.168.1.10",
+    "port": 50000,
+    "step": 0.01,
+    "velocity": 1.0
+  },
+  "smu": {
+    "ip": "10.0.0.80",
+    "port": 5025
+  }
 }

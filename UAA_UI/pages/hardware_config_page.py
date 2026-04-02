@@ -6,6 +6,9 @@ from PyQt6.QtCore import Qt, pyqtSignal
 from core.widgets import lbl, divider
 from pages.power_supply_panel import PowerSupplyPanel
 from pages.hexapod_panel import HexapodPanel
+from pages.linear_stage_panel import LinearStagePanel
+from pages.cartesian_panel import CartesianPanel
+from pages.smu_panel import SMUPanel
 from core import settings as cfg
 
 
@@ -106,7 +109,9 @@ class HardwareConfigPage(QWidget):
         devices = [
             ("Power Supply", "#3b82f6", True,  "psu"),
             ("Hexapod",      "#4a9eff", True,  "hxp"),
-            ("SMU",          "#22c55e", False, ""),
+            ("Linear Stage",  "#38bdf8", True,  "lin"),
+            ("Cartesian XYZ", "#4ade80", True,  "cart"),
+            ("SMU",           "#22c55e", True,  "smu"),
             ("Dispense",     "#a855f7", False, ""),
             ("UV Cure",      "#eab308", False, ""),
         ]
@@ -136,6 +141,15 @@ class HardwareConfigPage(QWidget):
             elif use_real and key == "hxp":
                 panel = HexapodPanel()
                 self._hxp_panel = panel
+            elif use_real and key == "lin":
+                panel = LinearStagePanel()
+                self._lin_panel = panel
+            elif use_real and key == "cart":
+                panel = CartesianPanel()
+                self._cart_panel = panel
+            elif use_real and key == "smu":
+                panel = SMUPanel()
+                self._smu_panel = panel
             else:
                 panel = EmptyPanel(name, color)
             self.stack.addWidget(panel)
@@ -170,6 +184,12 @@ class HardwareConfigPage(QWidget):
             self._psu_panel.load_all_settings(self.data["power_supplies"])
         if "hexapods" in self.data and self.data["hexapods"]:
             self._hxp_panel.load_all_settings(self.data["hexapods"])
+        if "linear_stage" in self.data and self.data["linear_stage"]:
+            self._lin_panel.load_settings(self.data["linear_stage"])
+        if "cartesian" in self.data and self.data["cartesian"]:
+            self._cart_panel.load_settings(self.data["cartesian"])
+        if "smu" in self.data and self.data["smu"]:
+            self._smu_panel.load_settings(self.data["smu"])
 
         # Select first tab by default
         if self._tabs:
@@ -186,5 +206,8 @@ class HardwareConfigPage(QWidget):
         # เก็บ PSU settings
         self.data["power_supplies"] = self._psu_panel.get_all_settings()
         self.data["hexapods"] = self._hxp_panel.get_all_settings()
+        self.data["linear_stage"] = self._lin_panel.get_settings()
+        self.data["cartesian"] = self._cart_panel.get_settings()
+        self.data["smu"] = self._smu_panel.get_settings()
         cfg.save(self.data)
         print("[Config] Saved power supply settings")
