@@ -290,8 +290,12 @@ class ChannelPanel(QFrame):
         self._auto = False
         self._stats = {"min": None, "max": None, "sum": 0.0, "n": 0}
         self.setStyleSheet(
-            "QFrame{background:#0d0f14;border:1px solid #1e2433;"
-            "border-radius:0 6px 6px 6px;}")
+            "QFrame{background:#0d0f14;"
+            "border-left:1px solid #1e2433;"
+            "border-right:1px solid #1e2433;"
+            "border-bottom:1px solid #1e2433;"
+            "border-top:none;"
+            "border-radius:0 0 6px 6px;}")
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(14,12,14,12)
@@ -347,6 +351,8 @@ class ChannelPanel(QFrame):
 
         # connect func change → update labels
         self.func_cb.currentTextChanged.connect(self._on_func_change)
+        # trigger ทันทีตอน init
+        self._on_func_change(self.func_cb.currentText())
         grid.addWidget(src, 1)
 
         # Readback
@@ -409,8 +415,13 @@ class ChannelPanel(QFrame):
 
         layout.addWidget(divider())
 
-        # Output controls
-        out_row = QHBoxLayout(); out_row.setSpacing(8)
+        # Output controls — อยู่ใน border
+        out_frame = QFrame()
+        out_frame.setStyleSheet(
+            "QFrame{background:#0a0c10;border:none;"
+            "border-radius:0 0 6px 6px;padding:2px;}")
+        of = QHBoxLayout(out_frame); of.setContentsMargins(8,6,8,6); of.setSpacing(8)
+
         self.onoff_btn = QPushButton("OFF")
         self.onoff_btn.setFixedSize(70,34)
         self._set_onoff_style(False)
@@ -418,9 +429,9 @@ class ChannelPanel(QFrame):
         self._out_on = False
 
         self.status_lbl = lbl("Output OFF","#4a5568",11)
-        out_row.addWidget(self.onoff_btn)
-        out_row.addWidget(self.status_lbl)
-        out_row.addStretch()
+        of.addWidget(self.onoff_btn)
+        of.addWidget(self.status_lbl)
+        of.addStretch()
 
         for label, fn in [
             ("Apply",        self._apply),
@@ -433,8 +444,8 @@ class ChannelPanel(QFrame):
                 "QPushButton{background:#161b22;border:1px solid #1e2433;"
                 "border-radius:4px;color:#8892a4;font-size:11px;padding:0 10px;}"
                 "QPushButton:hover{border-color:#4a9eff;color:#4a9eff;}")
-            b.clicked.connect(fn); out_row.addWidget(b)
-        layout.addLayout(out_row)
+            b.clicked.connect(fn); of.addWidget(b)
+        layout.addWidget(out_frame)
 
         # Auto timer
         self._timer = QTimer(self)
@@ -442,20 +453,13 @@ class ChannelPanel(QFrame):
         self._timer.start(1000)
 
     def _on_func_change(self, func):
-        """เปลี่ยน unit label ตาม source function"""
+        """เปลี่ยน unit label ตาม source function เท่านั้น ไม่แตะค่า"""
         if func == "Voltage":
-            # Source V → level=V, compliance=A
             if self._level_unit_lbl: self._level_unit_lbl.setText("V")
             if self._comp_unit_lbl:  self._comp_unit_lbl.setText("A")
-            # hint ค่า default
-            if self.level_edit.text() in ("0.001","0.0010"): self.level_edit.setText("2.000")
-            if self.comp_edit.text()  in ("2.000","2.0000"): self.comp_edit.setText("0.001")
         else:
-            # Source I → level=A, compliance=V
             if self._level_unit_lbl: self._level_unit_lbl.setText("A")
             if self._comp_unit_lbl:  self._comp_unit_lbl.setText("V")
-            if self.level_edit.text() in ("2.000","2.0000"): self.level_edit.setText("0.001")
-            if self.comp_edit.text()  in ("0.001","0.0010"): self.comp_edit.setText("2.000")
 
     def _hline(self):
         f = QFrame(); f.setFrameShape(QFrame.Shape.HLine)
@@ -657,11 +661,21 @@ class SMUPanel(QWidget):
         for i, name in enumerate(["SMU A","SMU B"]):
             btn = QPushButton(name); btn.setCheckable(True); btn.setFixedHeight(30)
             btn.setStyleSheet("""
-                QPushButton{background:#0d0f14;border:1px solid #1e2433;
-                    border-radius:5px 5px 0 0;border-bottom:none;
-                    color:#4a5568;font-size:12px;font-weight:600;padding:0 16px;}
-                QPushButton:checked{background:#0d0f14;color:#22c55e;
-                    border-color:#22c55e;border-bottom:1px solid #0d0f14;}
+                QPushButton{
+                    background:#0d0f14;
+                    border:1px solid #1e2433;
+                    border-bottom:none;
+                    border-radius:5px 5px 0 0;
+                    color:#4a5568;font-size:12px;font-weight:600;padding:0 20px;
+                }
+                QPushButton:checked{
+                    background:#0d0f14;
+                    border-top:2px solid #22c55e;
+                    border-left:1px solid #1e2433;
+                    border-right:1px solid #1e2433;
+                    border-bottom:2px solid #0d0f14;
+                    color:#22c55e;
+                }
                 QPushButton:hover{color:#8892a4;}
             """)
             btn.clicked.connect(lambda _, idx=i: self._switch_ch(idx))
@@ -678,7 +692,10 @@ class SMUPanel(QWidget):
             self._ch_panels.append(panel)
             self._ch_stack.addWidget(panel)
         layout.addWidget(self._ch_stack)
-        self._switch_ch(0)
+        # init tabs
+        for btn in self._ch_tabs: btn.setChecked(False)
+        self._ch_tabs[0].setChecked(True)
+        self._ch_stack.setCurrentIndex(0)
 
     def _switch_ch(self, idx):
         self._ch_stack.setCurrentIndex(idx)

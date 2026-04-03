@@ -370,7 +370,7 @@ class SingleHexapodWidget(QWidget):
                 QPushButton:hover{border-color:#4a9eff;color:#4a9eff;}
                 QPushButton:checked{background:#0d1520;border-color:#4a9eff;color:#4a9eff;font-weight:600;}
             """)
-            btn.clicked.connect(lambda _, n=name: self._set_orient(n))
+            btn.clicked.connect(lambda _, n=name: self._set_orient(n, show_warning=True))
             self._orient_btns[name] = btn
             orient_row.addWidget(btn)
         orient_row.addStretch()
@@ -405,9 +405,9 @@ class SingleHexapodWidget(QWidget):
         v.addWidget(self._warn_frame)
 
         layout.addWidget(card)
-        self._set_orient("Vertical")
+        self._set_orient("Vertical", show_warning=False)
 
-    def _set_orient(self, name):
+    def _set_orient(self, name, show_warning=False):
         self._orient = name
         for n, btn in self._orient_btns.items():
             btn.setChecked(n == name)
@@ -426,12 +426,12 @@ class SingleHexapodWidget(QWidget):
         self._orient_map_lbl.setText("&nbsp;&nbsp;".join(parts))
         self._orient_map_lbl.setTextFormat(Qt.TextFormat.RichText)
 
-        # แสดง warning
-        warn = ORIENT_WARNING.get(name, "")
-        if name != "Vertical":
+        # แสดง warning เฉพาะตอน user กดเปลี่ยนเท่านั้น
+        if show_warning and name != "Vertical":
+            warn = ORIENT_WARNING.get(name, "")
             self._warn_lbl.setText(warn)
             self._warn_frame.setVisible(True)
-        else:
+        elif show_warning and name == "Vertical":
             self._warn_frame.setVisible(False)
 
     # ── Position ─────────────────────────────────
@@ -833,7 +833,7 @@ class SingleHexapodWidget(QWidget):
     def load_settings(self, data):
         self.ip_edit.setText(data.get("ip",""))
         self.port_edit.setText(str(data.get("port",50000)))
-        self._set_orient(data.get("orientation","Vertical"))
+        self._set_orient(data.get("orientation","Vertical"), show_warning=False)
         self._set_step(data.get("step",0.010),"custom")
         self._set_vel(data.get("velocity",1.0))
 

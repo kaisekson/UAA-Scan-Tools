@@ -9,6 +9,9 @@ from pages.hexapod_panel import HexapodPanel
 from pages.linear_stage_panel import LinearStagePanel
 from pages.cartesian_panel import CartesianPanel
 from pages.smu_panel import SMUPanel
+from pages.wago_io_panel import WAGOIOPanel
+from pages.camera_panel import CameraPanel
+from pages.summary_panel import SummaryPanel
 from core import settings as cfg
 
 
@@ -107,13 +110,14 @@ class HardwareConfigPage(QWidget):
         self._panels = []
 
         devices = [
-            ("Power Supply", "#3b82f6", True,  "psu"),
-            ("Hexapod",      "#4a9eff", True,  "hxp"),
+            ("Summary",       "#8892a4", True,  "sum"),
+            ("Power Supply",  "#3b82f6", True,  "psu"),
+            ("Hexapod",       "#4a9eff", True,  "hxp"),
             ("Linear Stage",  "#38bdf8", True,  "lin"),
             ("Cartesian XYZ", "#4ade80", True,  "cart"),
             ("SMU",           "#22c55e", True,  "smu"),
-            ("Dispense",     "#a855f7", False, ""),
-            ("UV Cure",      "#eab308", False, ""),
+            ("WAGO I/O",      "#38bdf8", True,  "wago"),
+            ("Camera",        "#f472b6", True,  "cam"),
         ]
 
         from PyQt6.QtWidgets import QStackedWidget
@@ -135,7 +139,10 @@ class HardwareConfigPage(QWidget):
             self._tabs.append((name, tab))
             tab_col.addWidget(tab)
 
-            if use_real and key == "psu":
+            if use_real and key == "sum":
+                panel = SummaryPanel(self.data)
+                self._sum_panel = panel
+            elif use_real and key == "psu":
                 panel = PowerSupplyPanel()
                 self._psu_panel = panel
             elif use_real and key == "hxp":
@@ -150,6 +157,12 @@ class HardwareConfigPage(QWidget):
             elif use_real and key == "smu":
                 panel = SMUPanel()
                 self._smu_panel = panel
+            elif use_real and key == "wago":
+                panel = WAGOIOPanel()
+                self._wago_panel = panel
+            elif use_real and key == "cam":
+                panel = CameraPanel()
+                self._cam_panel = panel
             else:
                 panel = EmptyPanel(name, color)
             self.stack.addWidget(panel)
@@ -172,7 +185,7 @@ class HardwareConfigPage(QWidget):
         tab_col.addStretch()
 
         tab_widget = QWidget()
-        tab_widget.setFixedWidth(160)
+        tab_widget.setFixedWidth(185)
         tab_widget.setLayout(tab_col)
 
         body.addWidget(tab_widget)
@@ -190,6 +203,10 @@ class HardwareConfigPage(QWidget):
             self._cart_panel.load_settings(self.data["cartesian"])
         if "smu" in self.data and self.data["smu"]:
             self._smu_panel.load_settings(self.data["smu"])
+        if "wago" in self.data and self.data["wago"]:
+            self._wago_panel.load_settings(self.data["wago"])
+        if "camera" in self.data and self.data["camera"]:
+            self._cam_panel.load_settings(self.data["camera"])
 
         # Select first tab by default
         if self._tabs:
@@ -209,5 +226,7 @@ class HardwareConfigPage(QWidget):
         self.data["linear_stage"] = self._lin_panel.get_settings()
         self.data["cartesian"] = self._cart_panel.get_settings()
         self.data["smu"] = self._smu_panel.get_settings()
+        self.data["wago"] = self._wago_panel.get_settings()
+        self.data["camera"] = self._cam_panel.get_settings()
         cfg.save(self.data)
         print("[Config] Saved power supply settings")

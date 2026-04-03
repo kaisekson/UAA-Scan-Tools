@@ -1,0 +1,100 @@
+{
+  "ip": "192.168.1.50",
+  "port": 502,
+  "unit": 1,
+  "poll_interval": 500,
+  "do": [
+    {
+      "addr": false,
+      "name": "Gripper R",
+      "desc": ""
+    },
+    {
+      "addr": 1,
+      "name": "DO_00001",
+      "desc": ""
+    },
+    {
+      "addr": 2,
+      "name": "DO_00002",
+      "desc": ""
+    },
+    {
+      "addr": 3,
+      "name": "DO_00003",
+      "desc": ""
+    },
+    {
+      "addr": 22,
+      "name": "DO_00022",
+      "desc": ""
+    },
+    {
+      "addr": 23,
+      "name": "DO_00023",
+      "desc": ""
+    },
+    {
+      "addr": 24,
+      "name": "DO_00024",
+      "desc": ""
+    },
+    {
+      "addr": 25,
+      "name": "DO_00025",
+      "desc": ""
+    },
+    {
+      "addr": 26,
+      "name": "DO_00026",
+      "desc": ""
+    }
+  ],
+  "di": [
+    {
+      "addr": 1,
+      "name": "DI_00001",
+      "desc": ""
+    },
+    {
+      "addr": 2,
+      "name": "DI_00002",
+      "desc": ""
+    },
+    {
+      "addr": 3,
+      "name": "DI_00003",
+      "desc": ""
+    },
+    {
+      "addr": 4,
+      "name": "DI_00004",
+      "desc": ""
+    },
+    {
+      "addr": 5,
+      "name": "DI_00005",
+      "desc": ""
+    },
+    {
+      "addr": 6,
+      "name": "DI_00006",
+      "desc": ""
+    },
+    {
+      "addr": 7,
+      "name": "DI_00007",
+      "desc": ""
+    },
+    {
+      "addr": 8,
+      "name": "DI_00008",
+      "desc": ""
+    },
+    {
+      "addr": 9,
+      "name": "DI_00009",
+      "desc": ""
+    }
+  ]
+}

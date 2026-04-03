@@ -84,14 +84,14 @@
     {
       "ip": "",
       "port": 50000,
-      "orientation": "Horizontal Right",
+      "orientation": "Horizontal Left",
       "step": 0.01,
       "velocity": 1.0
     },
     {
       "ip": "192.168.1.5\u0e386",
       "port": 50000,
-      "orientation": "Horizontal Left",
+      "orientation": "Horizontal Right",
       "step": 0.01,
       "velocity": 1.0
     }
@@ -111,5 +111,11 @@
   "smu": {
     "ip": "10.0.0.80",
     "port": 5025
-  }
+  },
+  "wago": {
+    "ip": "192.168.1.50",
+    "port": 502,
+    "unit": 1
+  },
+  "wago_config_path": "C:/Users/seksont/Documents/GitHub/UAA-Scan-Tools/UAA_UI/wago_io.json"
 }

@@ -1,0 +1,80 @@
+{
+  "ip": "192.168.1.50",
+  "port": 502,
+  "unit": 1,
+  "poll_interval": 500,
+  "do": [
+    {
+      "addr": false,
+      "name": "DO_00000",
+      "desc": ""
+    },
+    {
+      "addr": false,
+      "name": "DO_00000",
+      "desc": ""
+    },
+    {
+      "addr": false,
+      "name": "DO_00000",
+      "desc": ""
+    },
+    {
+      "addr": false,
+      "name": "DO_00000",
+      "desc": ""
+    },
+    {
+      "addr": false,
+      "name": "DO_00000",
+      "desc": ""
+    },
+    {
+      "addr": false,
+      "name": "DO_00000",
+      "desc": ""
+    },
+    {
+      "addr": false,
+      "name": "DO_00000",
+      "desc": ""
+    },
+    {
+      "addr": false,
+      "name": "DO_00000",
+      "desc": ""
+    },
+    {
+      "addr": false,
+      "name": "DO_00000",
+      "desc": ""
+    }
+  ],
+  "di": [
+    {
+      "addr": false,
+      "name": "DI_00000",
+      "desc": ""
+    },
+    {
+      "addr": false,
+      "name": "DI_00000",
+      "desc": ""
+    },
+    {
+      "addr": false,
+      "name": "DI_00000",
+      "desc": ""
+    },
+    {
+      "addr": false,
+      "name": "DI_00000",
+      "desc": ""
+    },
+    {
+      "addr": false,
+      "name": "DI_00000",
+      "desc": ""
+    }
+  ]
+}
