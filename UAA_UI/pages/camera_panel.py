@@ -76,7 +76,7 @@ class CameraPanel(QWidget):
 
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
-        scroll.setStyleSheet("background:#111318;border:none;")
+        scroll.setStyleSheet("background:#1a1d24;border:none;")
         inner  = QWidget()
         layout = QVBoxLayout(inner)
         layout.setContentsMargins(16,14,16,14)
@@ -101,9 +101,9 @@ class CameraPanel(QWidget):
     # ── helpers ───────────────────────────────
     def _sh(self, layout, title, extra=None):
         row = QHBoxLayout(); row.setSpacing(8)
-        row.addWidget(lbl(title,"#4a5568",10,True))
+        row.addWidget(lbl(title,"#64748b",10,True))
         line = QFrame(); line.setFrameShape(QFrame.Shape.HLine)
-        line.setStyleSheet("background:#1e2433;max-height:1px;")
+        line.setStyleSheet("background:#3a4055;max-height:1px;")
         row.addWidget(line,1)
         if extra: row.addWidget(extra)
         layout.addLayout(row)
@@ -112,42 +112,42 @@ class CameraPanel(QWidget):
         ts = datetime.datetime.now().strftime("%H:%M:%S")
         self._log.append(
             f'<span style="color:{color};">[{ts}]</span> '
-            f'<span style="color:#8892a4;">{msg}</span>')
+            f'<span style="color:#94a3b8;">{msg}</span>')
 
     # ── Detect ────────────────────────────────
     def _build_detect(self, layout):
         scan_btn = QPushButton("⟳ Scan")
         scan_btn.setFixedHeight(24)
         scan_btn.setStyleSheet(
-            "QPushButton{background:#161b22;border:1px solid #1e2433;"
-            "border-radius:4px;color:#8892a4;font-size:11px;padding:0 10px;}"
+            "QPushButton{background:#2a2f3d;border:1px solid #3a4055;"
+            "border-radius:4px;color:#94a3b8;font-size:11px;padding:0 10px;}"
             "QPushButton:hover{border-color:#4a9eff;color:#4a9eff;}")
         scan_btn.clicked.connect(self._scan)
         self._sh(layout,"CAMERAS DETECTED", scan_btn)
 
         card = QFrame()
         card.setStyleSheet(
-            "QFrame{background:#0d0f14;border:1px solid #1e2433;border-radius:6px;}")
+            "QFrame{background:#20242e;border:1px solid #3a4055;border-radius:6px;}")
         v = QVBoxLayout(card); v.setContentsMargins(8,8,8,8); v.setSpacing(6)
 
         self._cam_list = QListWidget()
         self._cam_list.setFixedHeight(90)
         self._cam_list.setStyleSheet(
-            "QListWidget{background:transparent;border:none;color:#c5cdd9;font-size:12px;}"
-            "QListWidget::item{padding:4px 8px;border-radius:4px;border:1px solid #1e2433;"
-            "background:#0a0c10;margin-bottom:3px;}"
-            "QListWidget::item:selected{background:#0d1520;border-color:#4a9eff;color:#4a9eff;}")
+            "QListWidget{background:transparent;border:none;color:#e2e8f0;font-size:12px;}"
+            "QListWidget::item{padding:4px 8px;border-radius:4px;border:1px solid #3a4055;"
+            "background:#16191f;margin-bottom:3px;}"
+            "QListWidget::item:selected{background:#1e2d47;border-color:#4a9eff;color:#4a9eff;}")
         v.addWidget(self._cam_list)
 
         cr = QHBoxLayout(); cr.setSpacing(8)
         self.conn_btn = QPushButton("⟳  Connect")
         self.conn_btn.setFixedHeight(30)
         self.conn_btn.setStyleSheet(
-            "QPushButton{background:#0d1520;border:1px solid #4a9eff;"
+            "QPushButton{background:#1e2d47;border:1px solid #4a9eff;"
             "border-radius:5px;color:#4a9eff;font-size:12px;font-weight:600;padding:0 14px;}"
             "QPushButton:hover{background:#4a9eff;color:#000;}")
         self.conn_btn.clicked.connect(self._connect)
-        self.status_lbl = lbl("○  Not connected","#4a5568",12)
+        self.status_lbl = lbl("○  Not connected","#64748b",12)
         cr.addWidget(self.conn_btn); cr.addWidget(self.status_lbl); cr.addStretch()
         v.addLayout(cr)
         layout.addWidget(card)
@@ -162,18 +162,18 @@ class CameraPanel(QWidget):
 
         preview_frame = QFrame()
         preview_frame.setStyleSheet(
-            "QFrame{background:#0a0c10;border:1px solid #1e2433;border-radius:6px;}")
+            "QFrame{background:#16191f;border:1px solid #3a4055;border-radius:6px;}")
         pv = QVBoxLayout(preview_frame); pv.setContentsMargins(0,0,0,0); pv.setSpacing(0)
 
         # Header
         hdr = QFrame()
         hdr.setStyleSheet(
-            "QFrame{background:#0a0c10;border:none;"
-            "border-bottom:1px solid #1e2433;border-radius:6px 6px 0 0;}")
+            "QFrame{background:#16191f;border:none;"
+            "border-bottom:1px solid #3a4055;border-radius:6px 6px 0 0;}")
         hh = QHBoxLayout(hdr); hh.setContentsMargins(10,6,10,6); hh.setSpacing(8)
         self._live_dot = QFrame(); self._live_dot.setFixedSize(8,8)
         self._live_dot.setStyleSheet("QFrame{background:#3d0a0a;border-radius:4px;border:none;}")
-        self._live_lbl = lbl("No signal","#4a5568",11)
+        self._live_lbl = lbl("No signal","#64748b",11)
         live_btn = QPushButton("▶  Live"); live_btn.setFixedHeight(26)
         live_btn.setStyleSheet(
             "QPushButton{background:#1a3a1a;border:1px solid #22c55e;"
@@ -194,7 +194,7 @@ class CameraPanel(QWidget):
         self._img_lbl = QLabel()
         self._img_lbl.setFixedHeight(220)
         self._img_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._img_lbl.setStyleSheet("background:#0a0c10;color:#2a3444;font-size:12px;")
+        self._img_lbl.setStyleSheet("background:#16191f;color:#64748b;font-size:12px;")
         self._img_lbl.setText("📷  Camera not connected")
         pv.addWidget(self._img_lbl)
         col.addWidget(preview_frame)
@@ -203,18 +203,18 @@ class CameraPanel(QWidget):
         cap_row = QHBoxLayout(); cap_row.setSpacing(6)
         cap_btn = QPushButton("📸  Capture"); cap_btn.setFixedHeight(32)
         cap_btn.setStyleSheet(
-            "QPushButton{background:#0d1520;border:1px solid #4a9eff;"
+            "QPushButton{background:#1e2d47;border:1px solid #4a9eff;"
             "border-radius:5px;color:#4a9eff;font-size:12px;font-weight:600;padding:0 14px;}"
             "QPushButton:hover{background:#4a9eff;color:#000;}")
         cap_btn.clicked.connect(self._capture)
         self._path_lbl = QLabel(self._save_dir)
         self._path_lbl.setStyleSheet(
-            "background:#0a0c10;border:1px solid #1e2433;border-radius:4px;"
-            "color:#4a5568;font-size:11px;padding:5px 10px;font-family:monospace;")
+            "background:#16191f;border:1px solid #3a4055;border-radius:4px;"
+            "color:#64748b;font-size:11px;padding:5px 10px;font-family:monospace;")
         browse_btn = QPushButton("📂"); browse_btn.setFixedSize(32,32)
         browse_btn.setStyleSheet(
-            "QPushButton{background:#161b22;border:1px solid #1e2433;"
-            "border-radius:4px;color:#8892a4;font-size:13px;}"
+            "QPushButton{background:#2a2f3d;border:1px solid #3a4055;"
+            "border-radius:4px;color:#94a3b8;font-size:13px;}"
             "QPushButton:hover{border-color:#4a9eff;color:#4a9eff;}")
         browse_btn.clicked.connect(self._browse_dir)
         cap_row.addWidget(cap_btn); cap_row.addWidget(self._path_lbl,1); cap_row.addWidget(browse_btn)
@@ -228,7 +228,7 @@ class CameraPanel(QWidget):
 
         settings_frame = QFrame()
         settings_frame.setStyleSheet(
-            "QFrame{background:#0d0f14;border:1px solid #1e2433;border-radius:6px;}")
+            "QFrame{background:#20242e;border:1px solid #3a4055;border-radius:6px;}")
         sv = QVBoxLayout(settings_frame); sv.setContentsMargins(12,10,12,10); sv.setSpacing(8)
 
         # Param grid
@@ -244,21 +244,21 @@ class CameraPanel(QWidget):
         ]
         for i, (key, lbl_txt, default, options) in enumerate(fields):
             f = QFrame(); f.setStyleSheet(
-                "QFrame{background:#0a0c10;border:1px solid #1e2433;border-radius:5px;}")
+                "QFrame{background:#16191f;border:1px solid #3a4055;border-radius:5px;}")
             fv = QVBoxLayout(f); fv.setContentsMargins(8,6,8,6); fv.setSpacing(3)
-            fv.addWidget(lbl(lbl_txt,"#4a5568",9,True))
+            fv.addWidget(lbl(lbl_txt,"#64748b",9,True))
             if options:
                 w = QComboBox(); w.addItems(options)
                 w.setStyleSheet(
-                    "QComboBox{background:#161b22;border:1px solid #1e2433;border-radius:4px;"
-                    "color:#c5cdd9;padding:3px 6px;font-size:11px;}"
+                    "QComboBox{background:#2a2f3d;border:1px solid #3a4055;border-radius:4px;"
+                    "color:#e2e8f0;padding:3px 6px;font-size:11px;}"
                     "QComboBox::drop-down{border:none;}"
-                    "QComboBox QAbstractItemView{background:#0d0f14;color:#c5cdd9;}")
+                    "QComboBox QAbstractItemView{background:#20242e;color:#e2e8f0;}")
             else:
                 w = QLineEdit(default)
                 w.setStyleSheet(
-                    "background:#161b22;border:1px solid #1e2433;border-radius:4px;"
-                    "color:#c5cdd9;padding:4px 6px;font-size:12px;font-family:monospace;")
+                    "background:#2a2f3d;border:1px solid #3a4055;border-radius:4px;"
+                    "color:#e2e8f0;padding:4px 6px;font-size:12px;font-family:monospace;")
             self._params[key] = w
             fv.addWidget(w)
             pgrid.addWidget(f, i//2, i%2)
@@ -267,34 +267,34 @@ class CameraPanel(QWidget):
         apply_btn = QPushButton("Apply settings")
         apply_btn.setFixedHeight(30)
         apply_btn.setStyleSheet(
-            "QPushButton{background:#161b22;border:1px solid #1e2433;"
-            "border-radius:5px;color:#8892a4;font-size:12px;}"
+            "QPushButton{background:#2a2f3d;border:1px solid #3a4055;"
+            "border-radius:5px;color:#94a3b8;font-size:12px;}"
             "QPushButton:hover{border-color:#4a9eff;color:#4a9eff;}")
         apply_btn.clicked.connect(self._apply_settings)
         sv.addWidget(apply_btn)
         sv.addWidget(divider())
 
         # Capture settings
-        sv.addWidget(lbl("CAPTURE","#4a5568",10,True))
+        sv.addWidget(lbl("CAPTURE","#64748b",10,True))
         for attr, lbl_txt, default, options in [
             ("prefix_edit", "Filename prefix", "capture_", None),
             ("format_cb",   "Format",          None,       ["PNG","TIFF","BMP","JPEG"]),
             ("ts_cb",       "Auto-timestamp",  None,       ["ON","OFF"]),
         ]:
             row = QHBoxLayout(); row.setSpacing(6)
-            row.addWidget(lbl(lbl_txt,"#4a5568",10))
+            row.addWidget(lbl(lbl_txt,"#64748b",10))
             if options:
                 w = QComboBox(); w.addItems(options)
                 w.setStyleSheet(
-                    "QComboBox{background:#161b22;border:1px solid #1e2433;border-radius:4px;"
-                    "color:#c5cdd9;padding:3px 6px;font-size:11px;}"
+                    "QComboBox{background:#2a2f3d;border:1px solid #3a4055;border-radius:4px;"
+                    "color:#e2e8f0;padding:3px 6px;font-size:11px;}"
                     "QComboBox::drop-down{border:none;}"
-                    "QComboBox QAbstractItemView{background:#0d0f14;color:#c5cdd9;}")
+                    "QComboBox QAbstractItemView{background:#20242e;color:#e2e8f0;}")
             else:
                 w = QLineEdit(default)
                 w.setStyleSheet(
-                    "background:#161b22;border:1px solid #1e2433;border-radius:4px;"
-                    "color:#c5cdd9;padding:4px 6px;font-size:11px;font-family:monospace;")
+                    "background:#2a2f3d;border:1px solid #3a4055;border-radius:4px;"
+                    "color:#e2e8f0;padding:4px 6px;font-size:11px;font-family:monospace;")
             setattr(self, attr, w); row.addWidget(w,1)
             sv.addLayout(row)
 
@@ -308,8 +308,8 @@ class CameraPanel(QWidget):
         self._log = QTextEdit()
         self._log.setReadOnly(True); self._log.setFixedHeight(70)
         self._log.setStyleSheet(
-            "QTextEdit{background:#0a0c10;border:1px solid #1e2433;border-radius:5px;"
-            "color:#4a5568;font-size:11px;font-family:Consolas,monospace;}")
+            "QTextEdit{background:#16191f;border:1px solid #3a4055;border-radius:5px;"
+            "color:#64748b;font-size:11px;font-family:Consolas,monospace;}")
         layout.addWidget(self._log)
 
     # ── Scan ──────────────────────────────────
@@ -375,14 +375,14 @@ class CameraPanel(QWidget):
             except: pass
             self._camera = None
         self.status_lbl.setText("○  Not connected")
-        self.status_lbl.setStyleSheet("color:#4a5568;font-size:12px;")
+        self.status_lbl.setStyleSheet("color:#64748b;font-size:12px;")
         self.conn_btn.setText("⟳  Connect")
         self.conn_btn.clicked.disconnect()
         self.conn_btn.clicked.connect(self._connect)
         self._live_dot.setStyleSheet("QFrame{background:#3d0a0a;border-radius:4px;border:none;}")
         self._live_lbl.setText("No signal")
         self._img_lbl.setText("📷  Camera not connected")
-        self._log_msg("Disconnected","#4a5568")
+        self._log_msg("Disconnected","#64748b")
 
     # ── Live ──────────────────────────────────
     def _start_live(self):
@@ -405,7 +405,7 @@ class CameraPanel(QWidget):
             self._grabber = None
         self._live_dot.setStyleSheet("QFrame{background:#22c55e;border-radius:4px;border:none;}")
         self._live_lbl.setText("Connected")
-        self._log_msg("Live view stopped","#4a5568")
+        self._log_msg("Live view stopped","#64748b")
 
     def _on_frame(self, arr):
         """แปลง numpy array → QPixmap แสดงใน label"""

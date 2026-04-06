@@ -148,7 +148,7 @@ class LinearStagePanel(QWidget):
 
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
-        scroll.setStyleSheet("background:#111318;border:none;")
+        scroll.setStyleSheet("background:#1a1d24;border:none;")
 
         inner = QWidget()
         layout = QVBoxLayout(inner)
@@ -176,9 +176,9 @@ class LinearStagePanel(QWidget):
     # ── section header ────────────────────────
     def _sh(self, layout, title, extra_widget=None):
         row = QHBoxLayout(); row.setSpacing(8)
-        row.addWidget(lbl(title,"#4a5568",10,True))
+        row.addWidget(lbl(title,"#64748b",10,True))
         line = QFrame(); line.setFrameShape(QFrame.Shape.HLine)
-        line.setStyleSheet("background:#1e2433;max-height:1px;")
+        line.setStyleSheet("background:#3a4055;max-height:1px;")
         row.addWidget(line,1)
         if extra_widget: row.addWidget(extra_widget)
         layout.addLayout(row)
@@ -187,14 +187,14 @@ class LinearStagePanel(QWidget):
         ts = datetime.datetime.now().strftime("%H:%M:%S")
         self._log.append(
             f'<span style="color:{color};">[{ts}]</span> '
-            f'<span style="color:#8892a4;">{msg}</span>'
+            f'<span style="color:#94a3b8;">{msg}</span>'
         )
 
     # ── Connection ────────────────────────────
     def _build_connection(self, layout):
         self._sh(layout,"CONNECTION")
         card = QFrame()
-        card.setStyleSheet("QFrame{background:#0d0f14;border:1px solid #1e2433;border-radius:6px;}")
+        card.setStyleSheet("QFrame{background:#20242e;border:1px solid #3a4055;border-radius:6px;}")
         v = QVBoxLayout(card); v.setContentsMargins(12,10,12,10); v.setSpacing(8)
 
         row = QHBoxLayout(); row.setSpacing(10)
@@ -203,12 +203,12 @@ class LinearStagePanel(QWidget):
             ("port_edit", "Port",       "50000",        "#4a9eff"),
         ]:
             f = QFrame(); fv = QVBoxLayout(f); fv.setContentsMargins(0,0,0,0); fv.setSpacing(3)
-            fv.addWidget(lbl(label,"#4a5568",10))
+            fv.addWidget(lbl(label,"#64748b",10))
             e = QLineEdit(default)
-            e.setStyleSheet(f"border-left:2px solid {color};background:#161b22;"
-                "border-top:1px solid #1e2433;border-right:1px solid #1e2433;"
-                "border-bottom:1px solid #1e2433;border-radius:4px;"
-                "color:#c5cdd9;padding:5px 8px;font-size:12px;")
+            e.setStyleSheet(f"border-left:2px solid {color};background:#2a2f3d;"
+                "border-top:1px solid #3a4055;border-right:1px solid #3a4055;"
+                "border-bottom:1px solid #3a4055;border-radius:4px;"
+                "color:#e2e8f0;padding:5px 8px;font-size:12px;")
             setattr(self, attr, e); fv.addWidget(e)
             row.addWidget(f, 2 if attr=="ip_edit" else 1)
         v.addLayout(row)
@@ -217,13 +217,13 @@ class LinearStagePanel(QWidget):
         self.conn_btn = QPushButton("⟳  Connect")
         self.conn_btn.setFixedHeight(30)
         self.conn_btn.setStyleSheet(
-            "QPushButton{background:#0d1520;border:1px solid #4a9eff;"
+            "QPushButton{background:#1e2d47;border:1px solid #4a9eff;"
             "border-radius:5px;color:#4a9eff;font-size:12px;font-weight:600;padding:0 14px;}"
             "QPushButton:hover{background:#4a9eff;color:#000;}"
-            "QPushButton:disabled{border-color:#1e2433;color:#2a3444;background:#0a0c10;}")
+            "QPushButton:disabled{border-color:#3a4055;color:#64748b;background:#16191f;}")
         self.conn_btn.clicked.connect(self._connect)
-        self.status_lbl = lbl("○  Disconnected","#4a5568",12)
-        self.idn_lbl    = lbl("IDN: —","#2a3444",11)
+        self.status_lbl = lbl("○  Disconnected","#64748b",12)
+        self.idn_lbl    = lbl("IDN: —","#64748b",11)
         conn_row.addWidget(self.conn_btn)
         conn_row.addWidget(self.status_lbl)
         conn_row.addStretch()
@@ -236,32 +236,32 @@ class LinearStagePanel(QWidget):
         ref_btn = QPushButton("⟳")
         ref_btn.setFixedSize(26,22)
         ref_btn.setStyleSheet(
-            "QPushButton{background:#1a1f2e;border:1px solid #1e2433;"
-            "border-radius:3px;color:#8892a4;font-size:10px;}"
+            "QPushButton{background:#252a38;border:1px solid #3a4055;"
+            "border-radius:3px;color:#94a3b8;font-size:10px;}"
             "QPushButton:hover{border-color:#4a9eff;color:#4a9eff;}")
         ref_btn.clicked.connect(self._refresh_pos)
         self._sh(layout,"POSITION", ref_btn)
 
         pos_card = QFrame()
         pos_card.setStyleSheet(
-            "QFrame{background:#0a0c10;border:1px solid #1e2433;border-radius:6px;}")
+            "QFrame{background:#16191f;border:1px solid #3a4055;border-radius:6px;}")
         ph = QHBoxLayout(pos_card); ph.setContentsMargins(16,10,16,10); ph.setSpacing(16)
 
         left = QVBoxLayout(); left.setSpacing(2)
-        left.addWidget(lbl("CURRENT POSITION","#4a5568",9,True))
+        left.addWidget(lbl("CURRENT POSITION","#64748b",9,True))
         val_row = QHBoxLayout(); val_row.setSpacing(8)
         self._pos_val = QLabel("0.0000")
         self._pos_val.setFont(QFont("Consolas",26,700))
         self._pos_val.setStyleSheet("color:#4a9eff;background:transparent;")
         val_row.addWidget(self._pos_val)
-        val_row.addWidget(lbl("mm","#2a3444",13))
+        val_row.addWidget(lbl("mm","#64748b",13))
         val_row.addStretch()
         left.addLayout(val_row)
         ph.addLayout(left,1)
 
         right = QVBoxLayout(); right.setSpacing(4); right.setAlignment(Qt.AlignmentFlag.AlignRight)
-        right.addWidget(lbl("Travel limits","#4a5568",9))
-        self._lim_lbl = lbl("MIN: —   MAX: —","#8892a4",11)
+        right.addWidget(lbl("Travel limits","#64748b",9))
+        self._lim_lbl = lbl("MIN: —   MAX: —","#94a3b8",11)
         self._lim_lbl.setFont(QFont("Consolas",11))
         right.addWidget(self._lim_lbl)
         ph.addLayout(right)
@@ -272,7 +272,7 @@ class LinearStagePanel(QWidget):
         self._sh(layout,"JOG CONTROL")
         jog_card = QFrame()
         jog_card.setStyleSheet(
-            "QFrame{background:#0a0c10;border:1px solid #1e2433;border-radius:6px;}")
+            "QFrame{background:#16191f;border:1px solid #3a4055;border-radius:6px;}")
         jv = QVBoxLayout(jog_card); jv.setContentsMargins(12,10,12,10); jv.setSpacing(8)
 
         # Jog buttons + settings
@@ -282,9 +282,9 @@ class LinearStagePanel(QWidget):
             b = QPushButton(text)
             b.setFixedSize(52 if big else 44, 44)
             b.setStyleSheet(
-                "QPushButton{background:#161b22;border:1px solid #1e2433;"
-                "border-radius:5px;color:#8892a4;font-size:15px;}"
-                "QPushButton:hover{border-color:#4a9eff;color:#4a9eff;background:#0d1520;}"
+                "QPushButton{background:#2a2f3d;border:1px solid #3a4055;"
+                "border-radius:5px;color:#94a3b8;font-size:15px;}"
+                "QPushButton:hover{border-color:#4a9eff;color:#4a9eff;background:#1e2d47;}"
                 "QPushButton:pressed{background:#4a9eff22;}")
             return b
 
@@ -306,45 +306,45 @@ class LinearStagePanel(QWidget):
 
         # Step
         sr = QHBoxLayout(); sr.setSpacing(6)
-        sr.addWidget(lbl("Step","#4a5568",10))
+        sr.addWidget(lbl("Step","#64748b",10))
         self._step_edit = QLineEdit("0.0100"); self._step_edit.setFixedWidth(72)
         self._step_edit.setStyleSheet(
-            "background:#161b22;border:1px solid #1e2433;border-radius:4px;"
-            "color:#c5cdd9;padding:4px 6px;font-size:11px;font-family:monospace;")
+            "background:#2a2f3d;border:1px solid #3a4055;border-radius:4px;"
+            "color:#e2e8f0;padding:4px 6px;font-size:11px;font-family:monospace;")
         self._step_edit.textChanged.connect(
             lambda v: setattr(self,"_step",float(v) if v else 0.010))
         sr.addWidget(self._step_edit)
-        sr.addWidget(lbl("mm","#4a5568",9))
+        sr.addWidget(lbl("mm","#64748b",9))
         self._step_combo = QComboBox()
         for lb, _ in STEP_PRESETS: self._step_combo.addItem(lb)
         self._step_combo.setCurrentText("10µm")
         self._step_combo.setFixedHeight(26)
         self._step_combo.setStyleSheet(
-            "QComboBox{background:#161b22;border:1px solid #1e2433;border-radius:4px;"
-            "color:#c5cdd9;padding:2px 6px;font-size:11px;}"
+            "QComboBox{background:#2a2f3d;border:1px solid #3a4055;border-radius:4px;"
+            "color:#e2e8f0;padding:2px 6px;font-size:11px;}"
             "QComboBox::drop-down{border:none;}"
-            "QComboBox QAbstractItemView{background:#0d0f14;border:1px solid #1e2433;"
-            "color:#c5cdd9;font-size:11px;}")
+            "QComboBox QAbstractItemView{background:#20242e;border:1px solid #3a4055;"
+            "color:#e2e8f0;font-size:11px;}")
         self._step_combo.currentTextChanged.connect(self._on_step_combo)
         sr.addWidget(self._step_combo); sr.addStretch()
         mid.addLayout(sr)
 
         # Velocity
         vr = QHBoxLayout(); vr.setSpacing(6)
-        vr.addWidget(lbl("Velocity","#4a5568",10))
+        vr.addWidget(lbl("Velocity","#64748b",10))
         self._vel_edit = QLineEdit("1.000"); self._vel_edit.setFixedWidth(72)
         self._vel_edit.setStyleSheet(
-            "background:#161b22;border:1px solid #1e2433;border-radius:4px;"
-            "color:#c5cdd9;padding:4px 6px;font-size:11px;font-family:monospace;")
+            "background:#2a2f3d;border:1px solid #3a4055;border-radius:4px;"
+            "color:#e2e8f0;padding:4px 6px;font-size:11px;font-family:monospace;")
         self._vel_edit.textChanged.connect(
             lambda v: setattr(self,"_vel",float(v) if v else 1.0))
         vr.addWidget(self._vel_edit)
-        vr.addWidget(lbl("mm/s","#4a5568",9))
+        vr.addWidget(lbl("mm/s","#64748b",9))
         for lb, val in VEL_PRESETS:
             b = QPushButton(lb); b.setFixedHeight(24)
             b.setStyleSheet(
-                "QPushButton{background:#161b22;border:1px solid #1e2433;"
-                "border-radius:3px;color:#8892a4;font-size:10px;padding:0 6px;}"
+                "QPushButton{background:#2a2f3d;border:1px solid #3a4055;"
+                "border-radius:3px;color:#94a3b8;font-size:10px;padding:0 6px;}"
                 "QPushButton:hover{border-color:#4a9eff;color:#4a9eff;}")
             b.clicked.connect(lambda _, v=val: self._set_vel(v))
             vr.addWidget(b)
@@ -353,13 +353,13 @@ class LinearStagePanel(QWidget):
 
         # Mode
         mr = QHBoxLayout(); mr.setSpacing(6)
-        mr.addWidget(lbl("Mode","#4a5568",10))
+        mr.addWidget(lbl("Mode","#64748b",10))
         self._mode_step = QPushButton("Step")
         self._mode_cont = QPushButton("Continuous")
-        self._MODE_ON  = ("QPushButton{background:#0d1520;border:1px solid #22c55e;"
+        self._MODE_ON  = ("QPushButton{background:#1e2d47;border:1px solid #22c55e;"
                           "border-radius:4px;color:#22c55e;font-size:11px;font-weight:600;padding:0 10px;}")
-        self._MODE_OFF = ("QPushButton{background:#161b22;border:1px solid #1e2433;"
-                          "border-radius:4px;color:#4a5568;font-size:11px;padding:0 10px;}")
+        self._MODE_OFF = ("QPushButton{background:#2a2f3d;border:1px solid #3a4055;"
+                          "border-radius:4px;color:#64748b;font-size:11px;padding:0 10px;}")
         for b in [self._mode_step, self._mode_cont]:
             b.setFixedHeight(26); b.setStyleSheet(self._MODE_OFF)
         self._mode_step.setStyleSheet(self._MODE_ON)
@@ -376,13 +376,13 @@ class LinearStagePanel(QWidget):
 
         # Go to + quick commands
         bot = QHBoxLayout(); bot.setSpacing(8)
-        bot.addWidget(lbl("Go to","#4a5568",10))
+        bot.addWidget(lbl("Go to","#64748b",10))
         self._goto_edit = QLineEdit("0.000"); self._goto_edit.setFixedWidth(90)
         self._goto_edit.setStyleSheet(
-            "background:#161b22;border:1px solid #1e2433;border-radius:4px;"
-            "color:#c5cdd9;padding:5px 8px;font-size:12px;font-family:monospace;")
+            "background:#2a2f3d;border:1px solid #3a4055;border-radius:4px;"
+            "color:#e2e8f0;padding:5px 8px;font-size:12px;font-family:monospace;")
         bot.addWidget(self._goto_edit)
-        bot.addWidget(lbl("mm","#4a5568",9))
+        bot.addWidget(lbl("mm","#64748b",9))
         go_btn = QPushButton("Go")
         go_btn.setFixedHeight(30)
         go_btn.setStyleSheet(
@@ -403,9 +403,9 @@ class LinearStagePanel(QWidget):
             b = QPushButton(label); b.setFixedHeight(30)
             is_halt = label == "HALT"
             b.setStyleSheet(
-                f"QPushButton{{background:{'#1a0000' if is_halt else '#161b22'};"
-                f"border:1px solid {'#3d0a0a' if is_halt else '#1e2433'};"
-                f"border-radius:4px;color:#4a5568;font-size:11px;padding:0 10px;}}"
+                f"QPushButton{{background:{'#1a0000' if is_halt else '#2a2f3d'};"
+                f"border:1px solid {'#3d0a0a' if is_halt else '#3a4055'};"
+                f"border-radius:4px;color:#64748b;font-size:11px;padding:0 10px;}}"
                 f"QPushButton:hover{{border-color:{color};color:{color};"
                 f"{'background:#3d0a0a;' if is_halt else ''}}}")
             b.clicked.connect(fn); bot.addWidget(b)
@@ -415,7 +415,7 @@ class LinearStagePanel(QWidget):
 
     def _vline(self):
         f = QFrame(); f.setFrameShape(QFrame.Shape.VLine)
-        f.setStyleSheet("color:#1e2433;"); f.setFixedWidth(1); return f
+        f.setStyleSheet("color:#3a4055;"); f.setFixedWidth(1); return f
 
     # ── Console ───────────────────────────────
     def _build_console(self, layout):
@@ -424,13 +424,13 @@ class LinearStagePanel(QWidget):
         self._cmd_edit = QLineEdit()
         self._cmd_edit.setPlaceholderText("Type GCS command...")
         self._cmd_edit.setStyleSheet(
-            "background:#0a0c10;border:1px solid #1e2433;border-radius:4px;"
-            "color:#c5cdd9;padding:6px 10px;font-size:12px;font-family:Consolas,monospace;")
+            "background:#16191f;border:1px solid #3a4055;border-radius:4px;"
+            "color:#e2e8f0;padding:6px 10px;font-size:12px;font-family:Consolas,monospace;")
         self._cmd_edit.textChanged.connect(self._update_ac)
         self._cmd_edit.returnPressed.connect(self._send_cmd)
         send_btn = QPushButton("Send"); send_btn.setFixedHeight(32)
         send_btn.setStyleSheet(
-            "QPushButton{background:#0d1520;border:1px solid #4a9eff;"
+            "QPushButton{background:#1e2d47;border:1px solid #4a9eff;"
             "border-radius:4px;color:#4a9eff;font-size:12px;font-weight:600;padding:0 14px;}"
             "QPushButton:hover{background:#4a9eff;color:#000;}")
         send_btn.clicked.connect(self._send_cmd)
@@ -440,10 +440,10 @@ class LinearStagePanel(QWidget):
         self._ac = QListWidget()
         self._ac.setFixedHeight(64)
         self._ac.setStyleSheet(
-            "QListWidget{background:#0a0c10;border:1px solid #1e2433;border-radius:4px;"
-            "color:#8892a4;font-size:11px;font-family:Consolas,monospace;}"
-            "QListWidget::item:hover{background:#1e2433;color:#4a9eff;}"
-            "QListWidget::item:selected{background:#0d1520;color:#4a9eff;}")
+            "QListWidget{background:#16191f;border:1px solid #3a4055;border-radius:4px;"
+            "color:#94a3b8;font-size:11px;font-family:Consolas,monospace;}"
+            "QListWidget::item:hover{background:#3a4055;color:#4a9eff;}"
+            "QListWidget::item:selected{background:#1e2d47;color:#4a9eff;}")
         self._ac.itemClicked.connect(lambda i: self._cmd_edit.setText(i.text()))
         self._ac.setVisible(False)
         layout.addWidget(self._ac)
@@ -455,8 +455,8 @@ class LinearStagePanel(QWidget):
         self._log.setReadOnly(True)
         self._log.setFixedHeight(80)
         self._log.setStyleSheet(
-            "QTextEdit{background:#0a0c10;border:1px solid #1e2433;border-radius:5px;"
-            "color:#4a5568;font-size:11px;font-family:Consolas,monospace;}")
+            "QTextEdit{background:#16191f;border:1px solid #3a4055;border-radius:5px;"
+            "color:#64748b;font-size:11px;font-family:Consolas,monospace;}")
         layout.addWidget(self._log)
 
     # ── Connect ───────────────────────────────
@@ -490,7 +490,7 @@ class LinearStagePanel(QWidget):
         self.status_lbl.setText("●  Connected")
         self.status_lbl.setStyleSheet("color:#22c55e;font-size:12px;font-weight:600;")
         self.idn_lbl.setText(f"IDN: {idn}")
-        self.idn_lbl.setStyleSheet("color:#8892a4;font-size:11px;")
+        self.idn_lbl.setStyleSheet("color:#94a3b8;font-size:11px;")
         self.conn_btn.setText("✗  Disconnect")
         self.conn_btn.setEnabled(True)
         self.conn_btn.clicked.disconnect()
@@ -509,12 +509,12 @@ class LinearStagePanel(QWidget):
             except: pass
             self._drv = None
         self.status_lbl.setText("○  Disconnected")
-        self.status_lbl.setStyleSheet("color:#4a5568;font-size:12px;")
+        self.status_lbl.setStyleSheet("color:#64748b;font-size:12px;")
         self.idn_lbl.setText("IDN: —")
         self.conn_btn.setText("⟳  Connect")
         self.conn_btn.clicked.disconnect()
         self.conn_btn.clicked.connect(self._connect)
-        self._log_msg("Disconnected","#4a5568")
+        self._log_msg("Disconnected","#64748b")
 
     # ── Position ──────────────────────────────
     def _refresh_pos(self):

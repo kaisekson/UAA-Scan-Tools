@@ -117,5 +117,37 @@
     "port": 502,
     "unit": 1
   },
-  "wago_config_path": "C:/Users/seksont/Documents/GitHub/UAA-Scan-Tools/UAA_UI/wago_io.json"
+  "wago_config_path": "C:/Users/seksont/Documents/GitHub/UAA-Scan-Tools/UAA_UI/wago_io.json",
+  "quick_io_channels": [
+    {
+      "addr": 1,
+      "name": "DO_00001",
+      "desc": "",
+      "type": "do"
+    },
+    {
+      "addr": 2,
+      "name": "DO_00002",
+      "desc": "",
+      "type": "do"
+    },
+    {
+      "addr": 3,
+      "name": "DO_00003",
+      "desc": "",
+      "type": "do"
+    },
+    {
+      "addr": 22,
+      "name": "DO_00022",
+      "desc": "",
+      "type": "do"
+    },
+    {
+      "addr": 23,
+      "name": "DO_00023",
+      "desc": "",
+      "type": "do"
+    }
+  ]
 }

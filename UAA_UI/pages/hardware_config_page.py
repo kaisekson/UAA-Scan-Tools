@@ -12,6 +12,7 @@ from pages.smu_panel import SMUPanel
 from pages.wago_io_panel import WAGOIOPanel
 from pages.camera_panel import CameraPanel
 from pages.summary_panel import SummaryPanel
+from pages.tec_panel import TECPanel
 from core import settings as cfg
 
 
@@ -31,16 +32,16 @@ class DeviceTab(QPushButton):
         c = self._color
         self.setStyleSheet(f"""
             QPushButton {{
-                background: {'#0d1520' if checked else '#0d0f14'};
-                border: 1px solid {''+c if checked else '#1e2433'};
+                background: {'#1e2d47' if checked else '#20242e'};
+                border: 1px solid {''+c if checked else '#3a4055'};
                 border-radius: 6px;
                 text-align: left;
                 padding-left: 14px;
-                color: {''+c if checked else '#8892a4'};
+                color: {''+c if checked else '#94a3b8'};
                 font-size: 13px;
                 font-weight: {'600' if checked else '400'};
             }}
-            QPushButton:hover {{ border-color: {c}; color: {c}; background: #0d1520; }}
+            QPushButton:hover {{ border-color: {c}; color: {c}; background: #1e2d47; }}
         """)
         dot = "● " if checked else "○ "
         self.setText(dot + self._name)
@@ -57,9 +58,9 @@ class EmptyPanel(QWidget):
 
         ico = lbl("⚙", color, 36)
         ico.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        ttl = lbl(title, "#2a3444", 14, True)
+        ttl = lbl(title, "#64748b", 14, True)
         ttl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        sub = lbl("Configuration panel — coming soon", "#1e2433", 11)
+        sub = lbl("Configuration panel — coming soon", "#3a4055", 11)
         sub.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         layout.addWidget(ico)
@@ -80,7 +81,7 @@ class HardwareConfigPage(QWidget):
 
         # Title + Save
         top = QHBoxLayout()
-        top.addWidget(lbl("HARDWARE CONFIGURATION", "#c5cdd9", 14, True))
+        top.addWidget(lbl("HARDWARE CONFIGURATION", "#e2e8f0", 14, True))
         top.addStretch()
         save_btn = QPushButton("💾   Save All")
         save_btn.setFixedHeight(32)
@@ -110,7 +111,7 @@ class HardwareConfigPage(QWidget):
         self._panels = []
 
         devices = [
-            ("Summary",       "#8892a4", True,  "sum"),
+            ("Summary",       "#94a3b8", True,  "sum"),
             ("Power Supply",  "#3b82f6", True,  "psu"),
             ("Hexapod",       "#4a9eff", True,  "hxp"),
             ("Linear Stage",  "#38bdf8", True,  "lin"),
@@ -118,14 +119,15 @@ class HardwareConfigPage(QWidget):
             ("SMU",           "#22c55e", True,  "smu"),
             ("WAGO I/O",      "#38bdf8", True,  "wago"),
             ("Camera",        "#f472b6", True,  "cam"),
+            ("TEC",           "#cba6f7", True,  "tec"),
         ]
 
         from PyQt6.QtWidgets import QStackedWidget
         self.stack = QStackedWidget()
         self.stack.setStyleSheet("""
             QStackedWidget {
-                background: #0d0f14;
-                border: 1px solid #1e2433;
+                background: #20242e;
+                border: 1px solid #3a4055;
                 border-radius: 6px;
             }
         """)
@@ -163,6 +165,9 @@ class HardwareConfigPage(QWidget):
             elif use_real and key == "cam":
                 panel = CameraPanel()
                 self._cam_panel = panel
+            elif use_real and key == "tec":
+                panel = TECPanel()
+                self._tec_panel = panel
             else:
                 panel = EmptyPanel(name, color)
             self.stack.addWidget(panel)
@@ -175,9 +180,9 @@ class HardwareConfigPage(QWidget):
         add_btn.setStyleSheet("""
             QPushButton {
                 background: transparent;
-                border: 1px dashed #1e2433;
+                border: 1px dashed #3a4055;
                 border-radius: 6px;
-                color: #4a5568; font-size: 12px;
+                color: #64748b; font-size: 12px;
             }
             QPushButton:hover { border-color: #4a9eff; color: #4a9eff; }
         """)
@@ -207,6 +212,8 @@ class HardwareConfigPage(QWidget):
             self._wago_panel.load_settings(self.data["wago"])
         if "camera" in self.data and self.data["camera"]:
             self._cam_panel.load_settings(self.data["camera"])
+        if "tec" in self.data and self.data["tec"]:
+            self._tec_panel.load_settings(self.data["tec"])
 
         # Select first tab by default
         if self._tabs:
@@ -228,5 +235,6 @@ class HardwareConfigPage(QWidget):
         self.data["smu"] = self._smu_panel.get_settings()
         self.data["wago"] = self._wago_panel.get_settings()
         self.data["camera"] = self._cam_panel.get_settings()
+        self.data["tec"] = self._tec_panel.get_settings()
         cfg.save(self.data)
         print("[Config] Saved power supply settings")

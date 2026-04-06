@@ -94,8 +94,8 @@ class DORow(QFrame):
         self._state  = False
         self._log_fn = log_fn
         self.setStyleSheet(
-            "QFrame{background:#0a0c10;border:none;"
-            "border-top:1px solid #1e2433;}")
+            "QFrame{background:#16191f;border:none;"
+            "border-top:1px solid #3a4055;}")
 
         row = QHBoxLayout(self)
         row.setContentsMargins(10,5,10,5); row.setSpacing(8)
@@ -104,20 +104,20 @@ class DORow(QFrame):
         addr_lbl = QLabel(f"{addr:05d}")
         addr_lbl.setFixedWidth(48)
         addr_lbl.setFont(QFont("Consolas",10))
-        addr_lbl.setStyleSheet("color:#4a5568;background:transparent;")
+        addr_lbl.setStyleSheet("color:#64748b;background:transparent;")
         row.addWidget(addr_lbl)
 
         # Name + Desc
         info = QVBoxLayout(); info.setSpacing(2)
         self.name_edit = QLineEdit(name if name else f"DO_{addr:05d}")
         self.name_edit.setStyleSheet(
-            "background:#161b22;border:1px solid #1e2433;border-radius:3px;"
-            "color:#c5cdd9;padding:2px 6px;font-size:11px;font-weight:600;")
+            "background:#2a2f3d;border:1px solid #3a4055;border-radius:3px;"
+            "color:#e2e8f0;padding:2px 6px;font-size:11px;font-weight:600;")
         self.desc_edit = QLineEdit(desc)
         self.desc_edit.setPlaceholderText("description...")
         self.desc_edit.setStyleSheet(
             "background:transparent;border:none;"
-            "color:#4a5568;padding:1px 6px;font-size:10px;")
+            "color:#64748b;padding:1px 6px;font-size:10px;")
         info.addWidget(self.name_edit)
         info.addWidget(self.desc_edit)
         row.addLayout(info, 1)
@@ -158,7 +158,7 @@ class DORow(QFrame):
         else:
             self._led.setStyleSheet(
                 "QPushButton{background:#1a0000;border:1px solid #3d0a0a;"
-                "border-radius:6px;color:#4a5568;font-size:10px;font-weight:700;}"
+                "border-radius:6px;color:#64748b;font-size:10px;font-weight:700;}"
                 "QPushButton:hover{background:#3d0a0a;color:#ef4444;}")
             self._led.setText("OFF")
 
@@ -215,8 +215,8 @@ class DIRow(QFrame):
         self._addr  = addr
         self._state = False
         self.setStyleSheet(
-            "QFrame{background:#0a0c10;border:none;"
-            "border-top:1px solid #1e2433;}")
+            "QFrame{background:#16191f;border:none;"
+            "border-top:1px solid #3a4055;}")
 
         row = QHBoxLayout(self)
         row.setContentsMargins(10,5,10,5); row.setSpacing(8)
@@ -225,20 +225,20 @@ class DIRow(QFrame):
         addr_lbl = QLabel(f"{addr:05d}")
         addr_lbl.setFixedWidth(48)
         addr_lbl.setFont(QFont("Consolas",10))
-        addr_lbl.setStyleSheet("color:#4a5568;background:transparent;")
+        addr_lbl.setStyleSheet("color:#64748b;background:transparent;")
         row.addWidget(addr_lbl)
 
         # Name + Desc
         info = QVBoxLayout(); info.setSpacing(2)
         self.name_edit = QLineEdit(name if name else f"DI_{addr:05d}")
         self.name_edit.setStyleSheet(
-            "background:#161b22;border:1px solid #1e2433;border-radius:3px;"
-            "color:#c5cdd9;padding:2px 6px;font-size:11px;font-weight:600;")
+            "background:#2a2f3d;border:1px solid #3a4055;border-radius:3px;"
+            "color:#e2e8f0;padding:2px 6px;font-size:11px;font-weight:600;")
         self.desc_edit = QLineEdit(desc)
         self.desc_edit.setPlaceholderText("description...")
         self.desc_edit.setStyleSheet(
             "background:transparent;border:none;"
-            "color:#4a5568;padding:1px 6px;font-size:10px;")
+            "color:#64748b;padding:1px 6px;font-size:10px;")
         info.addWidget(self.name_edit)
         info.addWidget(self.desc_edit)
         row.addLayout(info, 1)
@@ -247,11 +247,11 @@ class DIRow(QFrame):
         self._led = QFrame()
         self._led.setFixedSize(32,32)
         self._led.setStyleSheet(
-            "QFrame{background:#0d0f14;border:1px solid #1e2433;border-radius:6px;}")
+            "QFrame{background:#20242e;border:1px solid #3a4055;border-radius:6px;}")
         row.addWidget(self._led)
 
         # State label
-        self._state_lbl = lbl("LOW","#4a5568",9,True)
+        self._state_lbl = lbl("LOW","#64748b",9,True)
         self._state_lbl.setFixedWidth(32)
         row.addWidget(self._state_lbl)
 
@@ -264,9 +264,9 @@ class DIRow(QFrame):
             self._state_lbl.setStyleSheet("color:#4a9eff;font-size:10px;font-weight:700;")
         else:
             self._led.setStyleSheet(
-                "QFrame{background:#0d0f14;border:1px solid #1e2433;border-radius:6px;}")
+                "QFrame{background:#20242e;border:1px solid #3a4055;border-radius:6px;}")
             self._state_lbl.setText("LOW")
-            self._state_lbl.setStyleSheet("color:#4a5568;font-size:10px;font-weight:700;")
+            self._state_lbl.setStyleSheet("color:#64748b;font-size:10px;font-weight:700;")
 
     def get_config(self):
         return {
@@ -289,7 +289,7 @@ class IOBox(QFrame):
         self._log_fn = log_fn
         self._rows   = []
         self.setStyleSheet(
-            f"QFrame{{background:#0d0f14;border:1px solid #1e2433;border-radius:6px;}}")
+            f"QFrame{{background:#20242e;border:1px solid #3a4055;border-radius:6px;}}")
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0,0,0,0); layout.setSpacing(0)
@@ -300,7 +300,7 @@ class IOBox(QFrame):
         dot = QFrame(); dot.setFixedSize(8,8)
         dot.setStyleSheet(f"QFrame{{background:{color};border-radius:4px;border:none;}}")
         title_lbl = lbl(title, color, 11, True)
-        self._count_lbl = lbl("0 channels","#4a5568",9)
+        self._count_lbl = lbl("0 channels","#64748b",9)
         self._count_lbl.setStyleSheet(
             f"color:{color};font-size:9px;background:{color}18;"
             f"border:1px solid {color}44;border-radius:8px;padding:2px 8px;")
@@ -308,21 +308,21 @@ class IOBox(QFrame):
         hdr.addStretch(); hdr.addWidget(self._count_lbl)
         hdr_frame = QFrame()
         hdr_frame.setStyleSheet(
-            "QFrame{background:#0a0c10;border:none;border-radius:6px 6px 0 0;"
-            "border-bottom:1px solid #1e2433;}")
+            "QFrame{background:#16191f;border:none;border-radius:6px 6px 0 0;"
+            "border-bottom:1px solid #3a4055;}")
         hdr_frame.setLayout(hdr)
         layout.addWidget(hdr_frame)
 
         # Column header
         col_hdr = QFrame()
         col_hdr.setStyleSheet(
-            "QFrame{background:#0a0c10;border:none;border-bottom:1px solid #1e2433;}")
+            "QFrame{background:#16191f;border:none;border-bottom:1px solid #3a4055;}")
         ch = QHBoxLayout(col_hdr); ch.setContentsMargins(10,4,10,4); ch.setSpacing(8)
-        ch.addWidget(lbl("ADDR","#4a5568",9,True)); ch.setSpacing(8)
-        lbl2 = lbl("NAME / DESC","#4a5568",9,True)
+        ch.addWidget(lbl("ADDR","#64748b",9,True)); ch.setSpacing(8)
+        lbl2 = lbl("NAME / DESC","#64748b",9,True)
         ch.addWidget(lbl2,1)
-        ch.addWidget(lbl("STATE","#4a5568",9,True))
-        ch.addWidget(lbl("","#4a5568",9,True))
+        ch.addWidget(lbl("STATE","#64748b",9,True))
+        ch.addWidget(lbl("","#64748b",9,True))
         layout.addWidget(col_hdr)
 
         # Rows container
@@ -338,15 +338,15 @@ class IOBox(QFrame):
         # Footer — add/remove
         footer = QFrame()
         footer.setStyleSheet(
-            "QFrame{background:#0a0c10;border:none;"
-            "border-top:1px solid #1e2433;border-radius:0 0 6px 6px;}")
+            "QFrame{background:#16191f;border:none;"
+            "border-top:1px solid #3a4055;border-radius:0 0 6px 6px;}")
         fl = QHBoxLayout(footer); fl.setContentsMargins(10,6,10,6); fl.setSpacing(6)
-        fl.addWidget(lbl("Add addr:","#4a5568",10))
+        fl.addWidget(lbl("Add addr:","#64748b",10))
         self._add_edit = QLineEdit("1")
         self._add_edit.setFixedWidth(64)
         self._add_edit.setStyleSheet(
-            "background:#161b22;border:1px solid #1e2433;border-radius:4px;"
-            "color:#c5cdd9;padding:3px 6px;font-size:11px;font-family:monospace;")
+            "background:#2a2f3d;border:1px solid #3a4055;border-radius:4px;"
+            "color:#e2e8f0;padding:3px 6px;font-size:11px;font-family:monospace;")
         add_btn = QPushButton("＋  Add")
         add_btn.setFixedHeight(28)
         add_btn.setStyleSheet(
@@ -358,7 +358,7 @@ class IOBox(QFrame):
         rem_btn.setFixedHeight(28)
         rem_btn.setStyleSheet(
             "QPushButton{background:#1a0000;border:1px solid #3d0a0a;"
-            "border-radius:4px;color:#4a5568;font-size:11px;padding:0 10px;}"
+            "border-radius:4px;color:#64748b;font-size:11px;padding:0 10px;}"
             "QPushButton:hover{border-color:#ef4444;color:#ef4444;background:#3d0a0a;}")
         rem_btn.clicked.connect(self._remove_last)
         fl.addWidget(self._add_edit); fl.addWidget(add_btn); fl.addWidget(rem_btn)
@@ -432,7 +432,7 @@ class WAGOIOPanel(QWidget):
 
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
-        scroll.setStyleSheet("background:#111318;border:none;")
+        scroll.setStyleSheet("background:#1a1d24;border:none;")
         inner  = QWidget()
         layout = QVBoxLayout(inner)
         layout.setContentsMargins(16,14,16,14); layout.setSpacing(10)
@@ -471,9 +471,9 @@ class WAGOIOPanel(QWidget):
 
     def _sh(self, layout, title, extra=None):
         row = QHBoxLayout(); row.setSpacing(8)
-        row.addWidget(lbl(title,"#4a5568",10,True))
+        row.addWidget(lbl(title,"#64748b",10,True))
         line = QFrame(); line.setFrameShape(QFrame.Shape.HLine)
-        line.setStyleSheet("background:#1e2433;max-height:1px;")
+        line.setStyleSheet("background:#3a4055;max-height:1px;")
         row.addWidget(line,1)
         if extra: row.addWidget(extra)
         layout.addLayout(row)
@@ -482,14 +482,14 @@ class WAGOIOPanel(QWidget):
         ts = datetime.datetime.now().strftime("%H:%M:%S")
         self._log.append(
             f'<span style="color:{color};">[{ts}]</span> '
-            f'<span style="color:#8892a4;">{msg}</span>')
+            f'<span style="color:#94a3b8;">{msg}</span>')
 
     # ── Connection ────────────────────────────
     def _build_connection(self, layout):
         self._sh(layout,"CONNECTION")
         card = QFrame()
         card.setStyleSheet(
-            "QFrame{background:#0d0f14;border:1px solid #1e2433;border-radius:6px;}")
+            "QFrame{background:#20242e;border:1px solid #3a4055;border-radius:6px;}")
         v = QVBoxLayout(card); v.setContentsMargins(12,10,12,10); v.setSpacing(8)
 
         grid = QHBoxLayout(); grid.setSpacing(10)
@@ -500,13 +500,13 @@ class WAGOIOPanel(QWidget):
         ]:
             f  = QFrame(); fv = QVBoxLayout(f)
             fv.setContentsMargins(0,0,0,0); fv.setSpacing(3)
-            fv.addWidget(lbl(lbl_txt,"#4a5568",10))
+            fv.addWidget(lbl(lbl_txt,"#64748b",10))
             e  = QLineEdit(default)
             e.setStyleSheet(
-                "border-left:2px solid #4a9eff;background:#161b22;"
-                "border-top:1px solid #1e2433;border-right:1px solid #1e2433;"
-                "border-bottom:1px solid #1e2433;border-radius:4px;"
-                "color:#c5cdd9;padding:5px 8px;font-size:12px;")
+                "border-left:2px solid #4a9eff;background:#2a2f3d;"
+                "border-top:1px solid #3a4055;border-right:1px solid #3a4055;"
+                "border-bottom:1px solid #3a4055;border-radius:4px;"
+                "color:#e2e8f0;padding:5px 8px;font-size:12px;")
             setattr(self,attr,e); fv.addWidget(e); grid.addWidget(f,w)
         v.addLayout(grid)
 
@@ -514,12 +514,12 @@ class WAGOIOPanel(QWidget):
         self.conn_btn = QPushButton("⟳  Connect")
         self.conn_btn.setFixedHeight(30)
         self.conn_btn.setStyleSheet(
-            "QPushButton{background:#0d1520;border:1px solid #4a9eff;"
+            "QPushButton{background:#1e2d47;border:1px solid #4a9eff;"
             "border-radius:5px;color:#4a9eff;font-size:12px;font-weight:600;padding:0 14px;}"
             "QPushButton:hover{background:#4a9eff;color:#000;}"
-            "QPushButton:disabled{border-color:#1e2433;color:#2a3444;background:#0a0c10;}")
+            "QPushButton:disabled{border-color:#3a4055;color:#64748b;background:#16191f;}")
         self.conn_btn.clicked.connect(self._connect)
-        self.status_lbl = lbl("○  Disconnected","#4a5568",12)
+        self.status_lbl = lbl("○  Disconnected","#64748b",12)
         cr.addWidget(self.conn_btn); cr.addWidget(self.status_lbl)
 
         # Poll controls
@@ -527,36 +527,36 @@ class WAGOIOPanel(QWidget):
         poll_btn = QPushButton("⟳ Poll all")
         poll_btn.setFixedHeight(28)
         poll_btn.setStyleSheet(
-            "QPushButton{background:#161b22;border:1px solid #1e2433;"
-            "border-radius:4px;color:#8892a4;font-size:11px;padding:0 10px;}"
+            "QPushButton{background:#2a2f3d;border:1px solid #3a4055;"
+            "border-radius:4px;color:#94a3b8;font-size:11px;padding:0 10px;}"
             "QPushButton:hover{border-color:#4a9eff;color:#4a9eff;}")
         poll_btn.clicked.connect(self._poll)
         cr.addWidget(poll_btn)
-        cr.addWidget(lbl("Interval","#4a5568",10))
+        cr.addWidget(lbl("Interval","#64748b",10))
         self.poll_edit = QLineEdit("500"); self.poll_edit.setFixedWidth(50)
         self.poll_edit.setStyleSheet(
-            "background:#161b22;border:1px solid #1e2433;border-radius:4px;"
-            "color:#c5cdd9;padding:3px 6px;font-size:11px;font-family:monospace;")
+            "background:#2a2f3d;border:1px solid #3a4055;border-radius:4px;"
+            "color:#e2e8f0;padding:3px 6px;font-size:11px;font-family:monospace;")
         cr.addWidget(self.poll_edit)
-        cr.addWidget(lbl("ms","#4a5568",10))
+        cr.addWidget(lbl("ms","#64748b",10))
 
         f = QFrame(); f.setFrameShape(QFrame.Shape.VLine)
-        f.setStyleSheet("color:#1e2433;"); f.setFixedWidth(1)
+        f.setStyleSheet("color:#3a4055;"); f.setFixedWidth(1)
         cr.addWidget(f)
 
         save_btn = QPushButton("💾 Save")
         save_btn.setFixedHeight(28)
         save_btn.setStyleSheet(
-            "QPushButton{background:#161b22;border:1px solid #1e2433;"
-            "border-radius:4px;color:#8892a4;font-size:11px;padding:0 10px;}"
+            "QPushButton{background:#2a2f3d;border:1px solid #3a4055;"
+            "border-radius:4px;color:#94a3b8;font-size:11px;padding:0 10px;}"
             "QPushButton:hover{border-color:#22c55e;color:#22c55e;}")
         save_btn.clicked.connect(self._save_config)
 
         load_btn = QPushButton("📂 Load")
         load_btn.setFixedHeight(28)
         load_btn.setStyleSheet(
-            "QPushButton{background:#161b22;border:1px solid #1e2433;"
-            "border-radius:4px;color:#8892a4;font-size:11px;padding:0 10px;}"
+            "QPushButton{background:#2a2f3d;border:1px solid #3a4055;"
+            "border-radius:4px;color:#94a3b8;font-size:11px;padding:0 10px;}"
             "QPushButton:hover{border-color:#4a9eff;color:#4a9eff;}")
         load_btn.clicked.connect(self._load_config)
         cr.addWidget(save_btn); cr.addWidget(load_btn)
@@ -579,8 +579,8 @@ class WAGOIOPanel(QWidget):
         self._log = QTextEdit()
         self._log.setReadOnly(True); self._log.setFixedHeight(70)
         self._log.setStyleSheet(
-            "QTextEdit{background:#0a0c10;border:1px solid #1e2433;border-radius:5px;"
-            "color:#4a5568;font-size:11px;font-family:Consolas,monospace;}")
+            "QTextEdit{background:#16191f;border:1px solid #3a4055;border-radius:5px;"
+            "color:#64748b;font-size:11px;font-family:Consolas,monospace;}")
         layout.addWidget(self._log)
 
     # ── Connect ───────────────────────────────
@@ -630,11 +630,11 @@ class WAGOIOPanel(QWidget):
             except: pass
             self._drv[0] = None
         self.status_lbl.setText("○  Disconnected")
-        self.status_lbl.setStyleSheet("color:#4a5568;font-size:12px;")
+        self.status_lbl.setStyleSheet("color:#64748b;font-size:12px;")
         self.conn_btn.setText("⟳  Connect")
         self.conn_btn.clicked.disconnect()
         self.conn_btn.clicked.connect(self._connect)
-        self._log_msg("Disconnected","#4a5568")
+        self._log_msg("Disconnected","#64748b")
 
     # ── Poll ─────────────────────────────────
     def _poll(self):
