@@ -22,6 +22,7 @@ from pages.hardware_config_page import HardwareConfigPage
 from pages.motion_control_page import MotionControlPage
 from pages.recipe_page import RecipePage
 from pages.process_page import ProcessPage
+from pages.scan_page import ScanPage
 from pages.blank_page import BlankPage
 
 
@@ -107,7 +108,8 @@ class MainWindow(QMainWindow):
         self.stack.addWidget(HardwareConfigPage())                    # 1
         self.stack.addWidget(self.motion)                             # 2
         self.stack.addWidget(RecipePage())                            # 3
-        self.stack.addWidget(BlankPage("Scan",       "📡"))          # 4
+        self._scan = ScanPage()
+        self.stack.addWidget(self._scan)                              # 4
         self.stack.addWidget(BlankPage("Alignment",  "🎯"))          # 5
         self._process = ProcessPage()
         self.stack.addWidget(self._process)                          # 6
