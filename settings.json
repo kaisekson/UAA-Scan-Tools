@@ -161,5 +161,14 @@
       "desc": "",
       "type": "di"
     }
-  ]
+  ],
+  "camera": {
+    "save_dir": "./capture",
+    "exposure": "10000",
+    "gain": "0.0",
+    "fps": "30"
+  },
+  "tec": {
+    "resource": ""
+  }
 }

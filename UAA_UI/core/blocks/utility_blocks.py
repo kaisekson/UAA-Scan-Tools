@@ -384,3 +384,67 @@ class SetTECBlock(BaseBlock):
         progress_cb(100)
         log_cb(f"Set TEC done", "ok")
         return True
+
+
+# ══════════════════════════════════════════════
+class WagoIOBlock(BaseBlock):
+    name     = "WAGO IO"
+    icon     = "⚡"
+    category = "IO"
+
+    def default_params(self):
+        return {
+            "channel":  "",
+            "action":   "ON",
+            "pulse_ms": 500,
+            "verify":   "Yes",
+        }
+
+    def run(self, params, devices, progress_cb, log_cb):
+        import time
+        wago    = devices.get("wago")
+        channel = params.get("channel","").strip()
+        action  = params.get("action","ON").upper()
+        pulse_ms = int(params.get("pulse_ms", 500))
+        verify  = params.get("verify","Yes") == "Yes"
+
+        if not channel:
+            log_cb("WAGO IO: no channel specified","error")
+            return False
+
+        log_cb(
+            f"WAGO IO: {channel} → {action}"
+            f"{f' {pulse_ms}ms' if action=='PULSE' else ''}","info")
+
+        if wago:
+            try:
+                if action == "ON":
+                    wago.write_do_by_name(channel, True)
+                elif action == "OFF":
+                    wago.write_do_by_name(channel, False)
+                elif action == "PULSE":
+                    wago.write_do_by_name(channel, True)
+                    self._sleep(pulse_ms/1000.0)
+                    wago.write_do_by_name(channel, False)
+
+                if verify and action != "PULSE":
+                    time.sleep(0.05)
+                    actual   = wago.read_do_by_name(channel)
+                    expected = action == "ON"
+                    if actual != expected:
+                        log_cb(
+                            f"WAGO IO verify failed: {channel} "
+                            f"expected {expected} got {actual}","error")
+                        return False
+                    log_cb(f"WAGO IO verify OK: {channel}","ok")
+
+            except Exception as e:
+                log_cb(f"WAGO IO error: {e}","error")
+                return False
+        else:
+            log_cb(f"WAGO IO (sim): {channel} → {action}","warn")
+            if action == "PULSE":
+                self._sleep(pulse_ms/1000.0)
+
+        progress_cb(100)
+        return True

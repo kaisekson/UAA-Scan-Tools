@@ -16,6 +16,7 @@ from .utility_blocks   import (
     MoveBlock,
     WaitBlock,
     SetTECBlock,
+    WagoIOBlock,
 )
 
 # Registry: ชื่อ step → block instance
@@ -30,6 +31,7 @@ BLOCK_REGISTRY: dict[str, BaseBlock] = {
         MoveBlock,
         WaitBlock,
         SetTECBlock,
+        WagoIOBlock,
     ]
 }
 
@@ -45,4 +47,5 @@ __all__ = [
     "MoveBlock",
     "WaitBlock",
     "SetTECBlock",
+    "WagoIOBlock",
 ]

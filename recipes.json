@@ -4,7 +4,7 @@
     "product_id": "",
     "version": "1.0",
     "description": "",
-    "modified": "2026-04-08 01:44",
+    "modified": "2026-04-08 05:36",
     "steps": [
       {
         "type": "Move",
@@ -29,14 +29,11 @@
         }
       },
       {
-        "type": "Move",
+        "type": "Call Recipe",
         "enabled": true,
         "params": {
-          "device": "Hexapod 1",
-          "x": "0.000",
-          "y": "0.000",
-          "z": "0.000",
-          "velocity": "5.000"
+          "recipe_name": "PSEK1_2",
+          "on_fail": "Stop"
         }
       },
       {
@@ -60,6 +57,16 @@
           "max_iter": "5",
           "retry": "Yes",
           "timeout": "30"
+        }
+      },
+      {
+        "type": "WAGO IO",
+        "enabled": true,
+        "params": {
+          "channel": "Gripper R",
+          "action": "OFF",
+          "pulse_ms": "500",
+          "verify": "Yes"
         }
       }
     ]
@@ -92,6 +99,31 @@
           "max_iter": "5",
           "retry": "Yes",
           "timeout": "30"
+        }
+      }
+    ]
+  },
+  {
+    "name": "M3",
+    "product_id": "",
+    "version": "1.0",
+    "description": "",
+    "modified": "2026-04-08 05:36",
+    "steps": [
+      {
+        "type": "Call Recipe",
+        "enabled": true,
+        "params": {
+          "recipe_name": "PSEK1_2",
+          "on_fail": "Stop"
+        }
+      },
+      {
+        "type": "Call Recipe",
+        "enabled": true,
+        "params": {
+          "recipe_name": "PSEK1_2",
+          "on_fail": "Stop"
         }
       }
     ]

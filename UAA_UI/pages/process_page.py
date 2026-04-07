@@ -82,61 +82,220 @@ def _hline():
 # ══════════════════════════════════════════════
 
 class StepRunner(QThread):
-    """
-    StepRunner — ใช้ BLOCK_REGISTRY แทน hardcode _run_* methods
-    แต่ละ block เป็น OOP class อยู่ใน core/blocks/
-    """
-    log      = pyqtSignal(str, str)
-    done     = pyqtSignal(bool)
-    progress = pyqtSignal(int)
+    log      = pyqtSignal(str, str)   # message, level
+    done     = pyqtSignal(bool)       # success
+    progress = pyqtSignal(int)        # 0-100
 
     def __init__(self, step, devices):
         super().__init__()
         self._step    = step
         self._devices = devices
-        self._block   = None   # block instance ที่กำลัง run
+        self._abort   = False
 
-    def abort(self):
-        if self._block:
-            self._block.abort()
+    def abort(self): self._abort = True
 
     def run(self):
-        from core.blocks import BLOCK_REGISTRY
         step_type = self._step.get("type","")
         params    = self._step.get("params",{})
-
         self.log.emit(f"Starting: {step_type}", "info")
+        try:
+            if step_type == "Call Recipe":
+                self._run_call_recipe(params)
+            else:
+                fn = getattr(self,
+                    f"_run_{step_type.lower().replace(' ','_').replace('/','_')}",
+                    self._run_generic)
+                fn(params)
+            if not self._abort:
+                self.log.emit(f"{step_type} — Done", "ok")
+                self.done.emit(True)
+            else:
+                self.done.emit(False)
+        except Exception as e:
+            self.log.emit(f"{step_type} — Error: {e}", "error")
+            self.done.emit(False)
 
-        block = BLOCK_REGISTRY.get(step_type)
-        if block is None:
-            self.log.emit(
-                f"Unknown block type: '{step_type}' — simulating", "warn")
-            import time
-            for i in range(10):
-                time.sleep(0.1)
-                self.progress.emit((i+1)*10)
-            self.done.emit(True)
+    def _run_call_recipe(self, params):
+        """
+        Call Recipe — load recipe อื่นมารันแบบ inline
+        ป้องกัน circular call ด้วย _call_stack
+        """
+        import json, os
+        recipe_name = params.get("recipe_name","")
+        on_fail     = params.get("on_fail","Stop")
+
+        if not recipe_name:
+            self.log.emit("Call Recipe: no recipe_name specified","error")
             return
 
-        # Reset abort flag ก่อน run
-        block.reset_abort()
-        self._block = block
-
-        try:
-            ok = block.run(
-                params   = params,
-                devices  = self._devices,
-                progress_cb = lambda v: self.progress.emit(v),
-                log_cb      = lambda m,l: self.log.emit(m,l),
-            )
+        # ป้องกัน circular call
+        call_stack = self._devices.get("_call_stack",[])
+        if recipe_name in call_stack:
             self.log.emit(
-                f"{step_type} — {'Done' if ok else 'Failed'}", "ok" if ok else "error")
-            self.done.emit(ok)
-        except Exception as e:
-            self.log.emit(f"{step_type} — Exception: {e}", "error")
-            self.done.emit(False)
-        finally:
-            self._block = None
+                f"Call Recipe: circular call detected! "
+                f"{' → '.join(call_stack)} → {recipe_name}","error")
+            return
+
+        # Load recipe จาก recipes.json
+        recipe_file = "recipes.json"
+        if not os.path.exists(recipe_file):
+            self.log.emit(f"Call Recipe: recipes.json not found","error")
+            return
+
+        with open(recipe_file) as f:
+            all_recipes = json.load(f)
+
+        target = next(
+            (r for r in all_recipes if r.get("name","") == recipe_name), None)
+        if not target:
+            self.log.emit(
+                f"Call Recipe: '{recipe_name}' not found","error")
+            return
+
+        steps = [s for s in target.get("steps",[]) if s.get("enabled",True)]
+        self.log.emit(
+            f"Call Recipe: '{recipe_name}' ({len(steps)} steps)","info")
+
+        # Push call stack
+        self._devices["_call_stack"] = call_stack + [recipe_name]
+
+        # รัน steps ของ recipe ที่เรียก
+        for i, step in enumerate(steps):
+            if self._abort: break
+            stype = step.get("type","")
+            sparams = step.get("params",{})
+            self.log.emit(f"  [{i+1}/{len(steps)}] {stype}","info")
+            self.progress.emit(int((i)/len(steps)*100))
+
+            if stype == "Call Recipe":
+                # recursive call
+                self._run_call_recipe(sparams)
+            else:
+                fn = getattr(self,
+                    f"_run_{stype.lower().replace(' ','_').replace('/','_')}",
+                    self._run_generic)
+                fn(sparams)
+
+            if self._abort: break
+
+        # Pop call stack
+        self._devices["_call_stack"] = call_stack
+        self.progress.emit(100)
+
+    def _sim(self, steps=10, delay=0.1):
+        for i in range(steps):
+            if self._abort: return
+            time.sleep(delay)
+            self.progress.emit(int((i+1)/steps*100))
+
+    def _run_generic(self, params):
+        self._sim()
+        self.log.emit("(Simulated — no hardware connected)", "warn")
+
+    def _run_coarse_scan(self, params):
+        self.log.emit(
+            f"Coarse scan X±{params.get('range_x','0.5')} "
+            f"Y±{params.get('range_y','0.5')} mm "
+            f"step {params.get('step','0.05')} mm", "info")
+        self._sim()
+
+    def _run_fine_align(self, params):
+        self.log.emit(
+            f"Fine align step {params.get('step','0.001')} mm "
+            f"tol {params.get('tolerance','0.01')} µA", "info")
+        self._sim()
+
+    def _run_tilt_correction(self, params):
+        self.log.emit(
+            f"Tilt correction axis {params.get('axis','U and V')} "
+            f"step {params.get('step_deg','0.01')}°", "info")
+        self._sim()
+
+    def _run_dispense(self, params):
+        self.log.emit(
+            f"Dispense {params.get('program','P1')} "
+            f"{params.get('pressure','50')}kPa "
+            f"{params.get('time_ms','100')}ms", "info")
+        self._sim(5, 0.1)
+
+    def _run_uv_cure(self, params):
+        t = float(params.get("time_s","5.0"))
+        self.log.emit(
+            f"UV Cure {t}s @ {params.get('intensity','100')}%", "info")
+        steps = max(1, int(t * 4))
+        self._sim(steps, t/steps)
+
+    def _run_verify(self, params):
+        self.log.emit(
+            f"Verify min signal {params.get('min_signal','0.5')} µA", "info")
+        self._sim()
+
+    def _run_move(self, params):
+        self.log.emit(
+            f"Move {params.get('device','Cartesian')} "
+            f"X:{params.get('x','0')} Y:{params.get('y','0')} Z:{params.get('z','0')} mm", "info")
+        self._sim(5, 0.1)
+
+    def _run_wait(self, params):
+        t = float(params.get("time_s","1.0"))
+        msg = params.get("message","")
+        self.log.emit(f"Wait {t}s{f' — {msg}' if msg else ''}", "info")
+        steps = max(1, int(t * 10))
+        self._sim(steps, t/steps)
+
+    def _run_set_tec(self, params):
+        self.log.emit(
+            f"Set TEC {params.get('setpoint','25')}°C "
+            f"wait {params.get('wait_stable','10')}s", "info")
+        self._sim(10, 0.2)
+
+    def _run_wago_io(self, params):
+        wago    = self._devices.get("wago")
+        channel = params.get("channel","").strip()
+        action  = params.get("action","ON").upper()
+        pulse_ms = int(params.get("pulse_ms", 500))
+        verify  = params.get("verify","Yes") == "Yes"
+
+        if not channel:
+            self.log.emit("WAGO IO: no channel specified","error")
+            return
+
+        self.log.emit(
+            f"WAGO IO: {channel} → {action}"
+            f"{f' {pulse_ms}ms' if action=='PULSE' else ''}", "info")
+
+        if wago:
+            try:
+                if action == "ON":
+                    wago.write_do_by_name(channel, True)
+                elif action == "OFF":
+                    wago.write_do_by_name(channel, False)
+                elif action == "PULSE":
+                    wago.write_do_by_name(channel, True)
+                    self._sim(1, pulse_ms/1000.0)
+                    wago.write_do_by_name(channel, False)
+
+                if verify:
+                    import time; time.sleep(0.05)
+                    actual = wago.read_do_by_name(channel)
+                    expected = True if action == "ON" else False if action == "OFF" else False
+                    if action != "PULSE" and actual != expected:
+                        self.log.emit(
+                            f"WAGO IO verify failed: {channel} "
+                            f"expected {expected} got {actual}","error")
+                        return
+                    self.log.emit(f"WAGO IO verify OK: {channel}","ok")
+
+            except Exception as e:
+                self.log.emit(f"WAGO IO error: {e}","error")
+                return
+        else:
+            self.log.emit(
+                f"WAGO IO (sim): {channel} → {action}","warn")
+            if action == "PULSE":
+                self._sim(1, pulse_ms/1000.0)
+
+        self.progress.emit(100)
 
 
 # ══════════════════════════════════════════════
