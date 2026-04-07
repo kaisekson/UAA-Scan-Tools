@@ -148,6 +148,18 @@
       "name": "DO_00023",
       "desc": "",
       "type": "do"
+    },
+    {
+      "addr": 8,
+      "name": "DI_00008",
+      "desc": "",
+      "type": "di"
+    },
+    {
+      "addr": 9,
+      "name": "DI_00009",
+      "desc": "",
+      "type": "di"
     }
   ]
 }

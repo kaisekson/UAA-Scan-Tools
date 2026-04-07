@@ -239,14 +239,14 @@ class ConnectWorker(QThread):
 class PosCard(QFrame):
     def __init__(self, axis, unit="mm", color="#4a9eff"):
         super().__init__()
-        self.setStyleSheet("QFrame{background:#16191f;border:1px solid #3a4055;border-radius:4px;}")
+        self.setStyleSheet("QFrame{background:#0a0c10;border:1px solid #1e2433;border-radius:4px;}")
         self.setFixedHeight(48)
         h = QHBoxLayout(self); h.setContentsMargins(8,4,8,4); h.setSpacing(4)
-        ax_lbl = lbl(axis, "#64748b", 9, True)
+        ax_lbl = lbl(axis, "#4a5568", 9, True)
         ax_lbl.setFixedWidth(14)
         self._val  = lbl("0.0000", color, 13, True)
         self._val.setFont(QFont("Consolas", 13, 700))
-        self._unit = lbl(unit, "#64748b", 9)
+        self._unit = lbl(unit, "#2a3444", 9)
         h.addWidget(ax_lbl)
         h.addWidget(self._val, 1)
         h.addWidget(self._unit)
@@ -264,9 +264,9 @@ class JogBtn(QPushButton):
         self.setFixedSize(34,34)
         self._color=color
         self.setStyleSheet(f"""
-            QPushButton{{background:#2a2f3d;border:1px solid #3a4055;
-                border-radius:4px;color:#94a3b8;font-size:13px;}}
-            QPushButton:hover{{border-color:{color};color:{color};background:#1e2d47;}}
+            QPushButton{{background:#161b22;border:1px solid #1e2433;
+                border-radius:4px;color:#8892a4;font-size:13px;}}
+            QPushButton:hover{{border-color:{color};color:{color};background:#0d1520;}}
             QPushButton:pressed{{background:{color}33;}}
         """)
 
@@ -325,29 +325,29 @@ class SingleHexapodWidget(QWidget):
     # ── Connection ───────────────────────────────
     def _build_connection(self, layout):
         self._sh(layout, "CONNECTION")
-        card = QFrame(); card.setStyleSheet("QFrame{background:#20242e;border:1px solid #3a4055;border-radius:6px;}")
+        card = QFrame(); card.setStyleSheet("QFrame{background:#0d0f14;border:1px solid #1e2433;border-radius:6px;}")
         v = QVBoxLayout(card); v.setContentsMargins(12,10,12,10); v.setSpacing(8)
 
         row = QHBoxLayout(); row.setSpacing(10)
         ip_f = QFrame(); ip_v = QVBoxLayout(ip_f); ip_v.setContentsMargins(0,0,0,0); ip_v.setSpacing(3)
-        ip_v.addWidget(lbl("IP Address","#64748b",10))
+        ip_v.addWidget(lbl("IP Address","#4a5568",10))
         self.ip_edit = QLineEdit(); self.ip_edit.setPlaceholderText("192.168.1.10")
-        self.ip_edit.setStyleSheet("border-left:2px solid #4a9eff;background:#2a2f3d;border-top:1px solid #3a4055;border-right:1px solid #3a4055;border-bottom:1px solid #3a4055;border-radius:4px;color:#e2e8f0;padding:5px 8px;font-size:12px;")
+        self.ip_edit.setStyleSheet("border-left:2px solid #4a9eff;background:#161b22;border-top:1px solid #1e2433;border-right:1px solid #1e2433;border-bottom:1px solid #1e2433;border-radius:4px;color:#c5cdd9;padding:5px 8px;font-size:12px;")
         ip_v.addWidget(self.ip_edit); row.addWidget(ip_f,2)
 
         pt_f = QFrame(); pt_v = QVBoxLayout(pt_f); pt_v.setContentsMargins(0,0,0,0); pt_v.setSpacing(3)
-        pt_v.addWidget(lbl("Port","#64748b",10))
+        pt_v.addWidget(lbl("Port","#4a5568",10))
         self.port_edit = QLineEdit("50000")
-        self.port_edit.setStyleSheet("border-left:2px solid #4a9eff;background:#2a2f3d;border-top:1px solid #3a4055;border-right:1px solid #3a4055;border-bottom:1px solid #3a4055;border-radius:4px;color:#e2e8f0;padding:5px 8px;font-size:12px;")
+        self.port_edit.setStyleSheet("border-left:2px solid #4a9eff;background:#161b22;border-top:1px solid #1e2433;border-right:1px solid #1e2433;border-bottom:1px solid #1e2433;border-radius:4px;color:#c5cdd9;padding:5px 8px;font-size:12px;")
         pt_v.addWidget(self.port_edit); row.addWidget(pt_f,1)
         v.addLayout(row)
 
         conn_row = QHBoxLayout(); conn_row.setSpacing(10)
         self.conn_btn = QPushButton("⟳  Connect"); self.conn_btn.setFixedHeight(30)
-        self.conn_btn.setStyleSheet("QPushButton{background:#1e2d47;border:1px solid #4a9eff;border-radius:5px;color:#4a9eff;font-size:12px;font-weight:600;padding:0 14px;}QPushButton:hover{background:#4a9eff;color:#000;}")
+        self.conn_btn.setStyleSheet("QPushButton{background:#0d1520;border:1px solid #4a9eff;border-radius:5px;color:#4a9eff;font-size:12px;font-weight:600;padding:0 14px;}QPushButton:hover{background:#4a9eff;color:#000;}")
         self.conn_btn.clicked.connect(self._connect)
-        self.status_lbl = lbl("○  Disconnected","#64748b",12)
-        self.idn_lbl    = lbl("IDN: —","#64748b",11)
+        self.status_lbl = lbl("○  Disconnected","#4a5568",12)
+        self.idn_lbl    = lbl("IDN: —","#2a3444",11)
         conn_row.addWidget(self.conn_btn); conn_row.addWidget(self.status_lbl)
         conn_row.addStretch(); conn_row.addWidget(self.idn_lbl)
         v.addLayout(conn_row)
@@ -356,19 +356,19 @@ class SingleHexapodWidget(QWidget):
     # ── Orientation ──────────────────────────────
     def _build_orientation(self, layout):
         self._sh(layout,"MOUNTING ORIENTATION")
-        card = QFrame(); card.setStyleSheet("QFrame{background:#20242e;border:1px solid #3a4055;border-radius:6px;}")
+        card = QFrame(); card.setStyleSheet("QFrame{background:#0d0f14;border:1px solid #1e2433;border-radius:6px;}")
         v = QVBoxLayout(card); v.setContentsMargins(12,10,12,10); v.setSpacing(8)
 
         orient_row = QHBoxLayout(); orient_row.setSpacing(6)
-        orient_row.addWidget(lbl("Orientation","#64748b",10))
+        orient_row.addWidget(lbl("Orientation","#4a5568",10))
         self._orient_btns = {}
         for name in ORIENTATIONS:
             btn = QPushButton(name); btn.setCheckable(True)
             btn.setFixedHeight(28)
             btn.setStyleSheet("""
-                QPushButton{background:#2a2f3d;border:1px solid #3a4055;border-radius:4px;color:#94a3b8;font-size:11px;padding:0 10px;}
+                QPushButton{background:#161b22;border:1px solid #1e2433;border-radius:4px;color:#8892a4;font-size:11px;padding:0 10px;}
                 QPushButton:hover{border-color:#4a9eff;color:#4a9eff;}
-                QPushButton:checked{background:#1e2d47;border-color:#4a9eff;color:#4a9eff;font-weight:600;}
+                QPushButton:checked{background:#0d1520;border-color:#4a9eff;color:#4a9eff;font-weight:600;}
             """)
             btn.clicked.connect(lambda _, n=name: self._set_orient(n, show_warning=True))
             self._orient_btns[name] = btn
@@ -377,7 +377,7 @@ class SingleHexapodWidget(QWidget):
         v.addLayout(orient_row)
 
         self._orient_map_lbl = QLabel()
-        self._orient_map_lbl.setStyleSheet("background:#16191f;border:1px solid #3a4055;border-radius:4px;color:#94a3b8;font-size:11px;padding:6px 10px;")
+        self._orient_map_lbl.setStyleSheet("background:#0a0c10;border:1px solid #1e2433;border-radius:4px;color:#8892a4;font-size:11px;padding:6px 10px;")
         self._orient_map_lbl.setWordWrap(True)
         v.addWidget(self._orient_map_lbl)
 
@@ -420,8 +420,8 @@ class SingleHexapodWidget(QWidget):
             color = "#4a9eff" if user_ax in "XYZ" else "#cba6f7"
             parts.append(
                 f"<span style='color:{color};font-weight:700;'>{user_ax}+</span>"
-                f"<span style='color:#64748b;'> → </span>"
-                f"<span style='color:#e2e8f0;'>MOV {ctrl_ax}{sign}</span>"
+                f"<span style='color:#4a5568;'> → </span>"
+                f"<span style='color:#c5cdd9;'>MOV {ctrl_ax}{sign}</span>"
             )
         self._orient_map_lbl.setText("&nbsp;&nbsp;".join(parts))
         self._orient_map_lbl.setTextFormat(Qt.TextFormat.RichText)
@@ -437,10 +437,10 @@ class SingleHexapodWidget(QWidget):
     # ── Position ─────────────────────────────────
     def _build_position(self, layout):
         sh_row = QHBoxLayout(); sh_row.setSpacing(8)
-        sh_row.addWidget(lbl("POSITION","#64748b",10,True))
-        line = QFrame(); line.setFrameShape(QFrame.Shape.HLine); line.setStyleSheet("background:#3a4055;max-height:1px;"); sh_row.addWidget(line,1)
+        sh_row.addWidget(lbl("POSITION","#4a5568",10,True))
+        line = QFrame(); line.setFrameShape(QFrame.Shape.HLine); line.setStyleSheet("background:#1e2433;max-height:1px;"); sh_row.addWidget(line,1)
         ref_btn = QPushButton("⟳"); ref_btn.setFixedSize(26,22)
-        ref_btn.setStyleSheet("QPushButton{background:#252a38;border:1px solid #3a4055;border-radius:3px;color:#94a3b8;font-size:10px;}QPushButton:hover{border-color:#4a9eff;color:#4a9eff;}")
+        ref_btn.setStyleSheet("QPushButton{background:#1a1f2e;border:1px solid #1e2433;border-radius:3px;color:#8892a4;font-size:10px;}QPushButton:hover{border-color:#4a9eff;color:#4a9eff;}")
         ref_btn.clicked.connect(self._refresh_pos)
         sh_row.addWidget(ref_btn); layout.addLayout(sh_row)
 
@@ -463,14 +463,14 @@ class SingleHexapodWidget(QWidget):
 
         # D-pad XY
         dpad_w = QFrame()
-        dpad_w.setStyleSheet("QFrame{background:#16191f;border:1px solid #3a4055;border-radius:6px;}")
+        dpad_w.setStyleSheet("QFrame{background:#0a0c10;border:1px solid #1e2433;border-radius:6px;}")
         dv = QVBoxLayout(dpad_w); dv.setContentsMargins(10,8,10,8); dv.setSpacing(4)
-        dv.addWidget(lbl("XY","#64748b",9,True))
+        dv.addWidget(lbl("XY","#4a5568",9,True))
         dpad_grid = QGridLayout(); dpad_grid.setSpacing(4)
         self._jog_up    = JogBtn("▲"); self._jog_down  = JogBtn("▼")
         self._jog_left  = JogBtn("◀"); self._jog_right = JogBtn("▶")
         ctr = QPushButton(); ctr.setFixedSize(38,38)
-        ctr.setStyleSheet("QPushButton{background:#1a1d24;border:1px solid #3a4055;border-radius:4px;}")
+        ctr.setStyleSheet("QPushButton{background:#111318;border:1px solid #1e2433;border-radius:4px;}")
         dpad_grid.addWidget(self._jog_up,   0,1)
         dpad_grid.addWidget(self._jog_left, 1,0)
         dpad_grid.addWidget(ctr,            1,1)
@@ -481,10 +481,10 @@ class SingleHexapodWidget(QWidget):
 
         # Z up/down
         z_w = QFrame()
-        z_w.setStyleSheet("QFrame{background:#16191f;border:1px solid #3a4055;border-radius:6px;}")
+        z_w.setStyleSheet("QFrame{background:#0a0c10;border:1px solid #1e2433;border-radius:6px;}")
         zv = QVBoxLayout(z_w); zv.setContentsMargins(10,8,10,8); zv.setSpacing(4)
         zv.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        zv.addWidget(lbl("Z","#64748b",9,True))
+        zv.addWidget(lbl("Z","#4a5568",9,True))
         self._jog_zup   = JogBtn("▲"); self._jog_zup.setFixedSize(42,38)
         self._jog_zdown = JogBtn("▼"); self._jog_zdown.setFixedSize(42,38)
         zv.addWidget(self._jog_zup)
@@ -494,9 +494,9 @@ class SingleHexapodWidget(QWidget):
 
         # Rotation UVW
         rot_w = QFrame()
-        rot_w.setStyleSheet("QFrame{background:#16191f;border:1px solid #3a4055;border-radius:6px;}")
+        rot_w.setStyleSheet("QFrame{background:#0a0c10;border:1px solid #1e2433;border-radius:6px;}")
         rv = QVBoxLayout(rot_w); rv.setContentsMargins(10,8,10,8); rv.setSpacing(6)
-        rv.addWidget(lbl("ROTATION","#64748b",9,True))
+        rv.addWidget(lbl("ROTATION","#4a5568",9,True))
         self._rot_btns = {}
         for ax, color in [("U","#cba6f7"),("V","#cba6f7"),("W","#cba6f7")]:
             row = QHBoxLayout(); row.setSpacing(5)
@@ -512,16 +512,16 @@ class SingleHexapodWidget(QWidget):
 
         # Settings panel
         set_w = QFrame()
-        set_w.setStyleSheet("QFrame{background:#16191f;border:1px solid #3a4055;border-radius:6px;}")
+        set_w.setStyleSheet("QFrame{background:#0a0c10;border:1px solid #1e2433;border-radius:6px;}")
         sv = QVBoxLayout(set_w); sv.setContentsMargins(12,8,12,8); sv.setSpacing(6)
 
         # Mode
         mode_row = QHBoxLayout(); mode_row.setSpacing(5)
-        mode_row.addWidget(lbl("Mode","#64748b",10))
+        mode_row.addWidget(lbl("Mode","#4a5568",10))
         self._mode_step = QPushButton("Step"); self._mode_step.setCheckable(True); self._mode_step.setChecked(True)
         self._mode_cont = QPushButton("Continuous"); self._mode_cont.setCheckable(True)
-        MODE_OFF = "QPushButton{background:#2a2f3d;border:1px solid #3a4055;border-radius:4px;color:#64748b;font-size:11px;padding:0 10px;}"
-        MODE_ON  = "QPushButton{background:#1e2d47;border:1px solid #22c55e;border-radius:4px;color:#22c55e;font-size:11px;font-weight:600;padding:0 10px;}"
+        MODE_OFF = "QPushButton{background:#161b22;border:1px solid #1e2433;border-radius:4px;color:#4a5568;font-size:11px;padding:0 10px;}"
+        MODE_ON  = "QPushButton{background:#0d1520;border:1px solid #22c55e;border-radius:4px;color:#22c55e;font-size:11px;font-weight:600;padding:0 10px;}"
         for b in [self._mode_step, self._mode_cont]:
             b.setFixedHeight(26); b.setCheckable(False)
             b.setStyleSheet(MODE_OFF)
@@ -535,11 +535,11 @@ class SingleHexapodWidget(QWidget):
 
         # Step size + preset
         step_row = QHBoxLayout(); step_row.setSpacing(5)
-        step_row.addWidget(lbl("Step","#64748b",10))
+        step_row.addWidget(lbl("Step","#4a5568",10))
         self._step_edit = QLineEdit("0.010"); self._step_edit.setFixedWidth(64)
-        self._step_edit.setStyleSheet("background:#2a2f3d;border:1px solid #3a4055;border-radius:4px;color:#e2e8f0;padding:4px 6px;font-size:11px;font-family:monospace;")
+        self._step_edit.setStyleSheet("background:#161b22;border:1px solid #1e2433;border-radius:4px;color:#c5cdd9;padding:4px 6px;font-size:11px;font-family:monospace;")
         self._step_edit.textChanged.connect(lambda v: setattr(self,"_step",float(v) if v else 0.010))
-        step_row.addWidget(self._step_edit); step_row.addWidget(lbl("mm","#64748b",9))
+        step_row.addWidget(self._step_edit); step_row.addWidget(lbl("mm","#4a5568",9))
         from PyQt6.QtWidgets import QComboBox
         self._step_combo = QComboBox()
         for label, _ in STEP_PRESETS:
@@ -547,10 +547,10 @@ class SingleHexapodWidget(QWidget):
         self._step_combo.setCurrentText("10µm")
         self._step_combo.setFixedHeight(26)
         self._step_combo.setStyleSheet("""
-            QComboBox{background:#2a2f3d;border:1px solid #3a4055;border-radius:4px;
-                color:#e2e8f0;padding:2px 6px;font-size:11px;}
+            QComboBox{background:#161b22;border:1px solid #1e2433;border-radius:4px;
+                color:#c5cdd9;padding:2px 6px;font-size:11px;}
             QComboBox::drop-down{border:none;}
-            QComboBox QAbstractItemView{background:#20242e;border:1px solid #3a4055;color:#e2e8f0;font-size:11px;}
+            QComboBox QAbstractItemView{background:#0d0f14;border:1px solid #1e2433;color:#c5cdd9;font-size:11px;}
         """)
         self._step_combo.currentTextChanged.connect(self._on_step_combo)
         step_row.addWidget(self._step_combo)
@@ -558,22 +558,22 @@ class SingleHexapodWidget(QWidget):
 
         # Velocity + preset
         vel_row = QHBoxLayout(); vel_row.setSpacing(5)
-        vel_row.addWidget(lbl("Vel","#64748b",10))
+        vel_row.addWidget(lbl("Vel","#4a5568",10))
         self._vel_edit = QLineEdit("1.000"); self._vel_edit.setFixedWidth(64)
-        self._vel_edit.setStyleSheet("background:#2a2f3d;border:1px solid #3a4055;border-radius:4px;color:#e2e8f0;padding:4px 6px;font-size:11px;font-family:monospace;")
+        self._vel_edit.setStyleSheet("background:#161b22;border:1px solid #1e2433;border-radius:4px;color:#c5cdd9;padding:4px 6px;font-size:11px;font-family:monospace;")
         self._vel_edit.textChanged.connect(lambda v: setattr(self,"_vel",float(v) if v else 1.0))
-        vel_row.addWidget(self._vel_edit); vel_row.addWidget(lbl("mm/s","#64748b",9))
+        vel_row.addWidget(self._vel_edit); vel_row.addWidget(lbl("mm/s","#4a5568",9))
         for label, val in VEL_PRESETS:
             b = QPushButton(label); b.setFixedHeight(24)
-            b.setStyleSheet("QPushButton{background:#2a2f3d;border:1px solid #3a4055;border-radius:3px;color:#94a3b8;font-size:10px;padding:0 5px;}QPushButton:hover{border-color:#4a9eff;color:#4a9eff;}")
+            b.setStyleSheet("QPushButton{background:#161b22;border:1px solid #1e2433;border-radius:3px;color:#8892a4;font-size:10px;padding:0 5px;}QPushButton:hover{border-color:#4a9eff;color:#4a9eff;}")
             b.clicked.connect(lambda _, v=val: self._set_vel(v))
             vel_row.addWidget(b)
         sv.addLayout(vel_row)
         # Quick commands — grid 2 คอลัมน์
         qcmd_w = QFrame()
-        qcmd_w.setStyleSheet("QFrame{background:#16191f;border:1px solid #3a4055;border-radius:6px;}")
+        qcmd_w.setStyleSheet("QFrame{background:#0a0c10;border:1px solid #1e2433;border-radius:6px;}")
         qv = QVBoxLayout(qcmd_w); qv.setContentsMargins(10,8,10,8); qv.setSpacing(5)
-        qv.addWidget(lbl("COMMANDS","#64748b",9,True))
+        qv.addWidget(lbl("COMMANDS","#4a5568",9,True))
         qgrid = QGridLayout(); qgrid.setSpacing(4)
         cmds = [
             ("Home",      self._home,    "#4a9eff"),
@@ -586,7 +586,7 @@ class SingleHexapodWidget(QWidget):
         ]
         for i, (label, fn, color) in enumerate(cmds):
             b = QPushButton(label); b.setFixedHeight(28)
-            b.setStyleSheet(f"QPushButton{{background:#2a2f3d;border:1px solid #3a4055;border-radius:4px;color:#64748b;font-size:11px;padding:0 8px;}}QPushButton:hover{{border-color:{color};color:{color};}}")
+            b.setStyleSheet(f"QPushButton{{background:#161b22;border:1px solid #1e2433;border-radius:4px;color:#4a5568;font-size:11px;padding:0 8px;}}QPushButton:hover{{border-color:{color};color:{color};}}")
             b.clicked.connect(fn)
             qgrid.addWidget(b, i//2, i%2)
         qv.addLayout(qgrid)
@@ -610,18 +610,18 @@ class SingleHexapodWidget(QWidget):
         input_row = QHBoxLayout(); input_row.setSpacing(6)
         self._cmd_edit = QLineEdit()
         self._cmd_edit.setPlaceholderText("Type GCS command...")
-        self._cmd_edit.setStyleSheet("background:#16191f;border:1px solid #3a4055;border-radius:4px;color:#e2e8f0;padding:6px 10px;font-size:12px;font-family:Consolas,monospace;")
+        self._cmd_edit.setStyleSheet("background:#0a0c10;border:1px solid #1e2433;border-radius:4px;color:#c5cdd9;padding:6px 10px;font-size:12px;font-family:Consolas,monospace;")
         self._cmd_edit.textChanged.connect(self._update_autocomplete)
         self._cmd_edit.returnPressed.connect(self._send_cmd)
         send_btn = QPushButton("Send"); send_btn.setFixedHeight(32)
-        send_btn.setStyleSheet("QPushButton{background:#1e2d47;border:1px solid #4a9eff;border-radius:4px;color:#4a9eff;font-size:12px;font-weight:600;padding:0 14px;}QPushButton:hover{background:#4a9eff;color:#000;}")
+        send_btn.setStyleSheet("QPushButton{background:#0d1520;border:1px solid #4a9eff;border-radius:4px;color:#4a9eff;font-size:12px;font-weight:600;padding:0 14px;}QPushButton:hover{background:#4a9eff;color:#000;}")
         send_btn.clicked.connect(self._send_cmd)
         input_row.addWidget(self._cmd_edit,1); input_row.addWidget(send_btn)
         layout.addLayout(input_row)
 
         self._ac_list = QListWidget()
         self._ac_list.setFixedHeight(72)
-        self._ac_list.setStyleSheet("QListWidget{background:#16191f;border:1px solid #3a4055;border-radius:4px;color:#94a3b8;font-size:11px;font-family:Consolas,monospace;}QListWidget::item:hover{background:#3a4055;color:#4a9eff;}QListWidget::item:selected{background:#1e2d47;color:#4a9eff;}")
+        self._ac_list.setStyleSheet("QListWidget{background:#0a0c10;border:1px solid #1e2433;border-radius:4px;color:#8892a4;font-size:11px;font-family:Consolas,monospace;}QListWidget::item:hover{background:#1e2433;color:#4a9eff;}QListWidget::item:selected{background:#0d1520;color:#4a9eff;}")
         self._ac_list.itemClicked.connect(lambda item: self._cmd_edit.setText(item.text()))
         self._ac_list.setVisible(False)
         layout.addWidget(self._ac_list)
@@ -632,21 +632,21 @@ class SingleHexapodWidget(QWidget):
         self._log = QTextEdit()
         self._log.setReadOnly(True)
         self._log.setFixedHeight(80)
-        self._log.setStyleSheet("QTextEdit{background:#16191f;border:1px solid #3a4055;border-radius:5px;color:#64748b;font-size:11px;font-family:Consolas,monospace;}")
+        self._log.setStyleSheet("QTextEdit{background:#0a0c10;border:1px solid #1e2433;border-radius:5px;color:#4a5568;font-size:11px;font-family:Consolas,monospace;}")
         layout.addWidget(self._log)
 
     # ── Section header ────────────────────────────
     def _sh(self, layout, title):
         row = QHBoxLayout(); row.setSpacing(8)
-        row.addWidget(lbl(title,"#64748b",10,True))
+        row.addWidget(lbl(title,"#4a5568",10,True))
         line = QFrame(); line.setFrameShape(QFrame.Shape.HLine)
-        line.setStyleSheet("background:#3a4055;max-height:1px;"); row.addWidget(line,1)
+        line.setStyleSheet("background:#1e2433;max-height:1px;"); row.addWidget(line,1)
         layout.addLayout(row)
 
     # ── Log helper ────────────────────────────────
     def _log_msg(self, msg, color="#22c55e"):
         ts = datetime.datetime.now().strftime("%H:%M:%S")
-        self._log.append(f'<span style="color:{color};">[{ts}]</span> <span style="color:#94a3b8;">{msg}</span>')
+        self._log.append(f'<span style="color:{color};">[{ts}]</span> <span style="color:#8892a4;">{msg}</span>')
 
     # ── Connect ───────────────────────────────────
     def _connect(self):
@@ -672,7 +672,7 @@ class SingleHexapodWidget(QWidget):
             self._log_msg(f"Post-connect error: {e}", "#ef4444")
             return
         self.status_lbl.setText("●  Connected"); self.status_lbl.setStyleSheet("color:#22c55e;font-size:12px;font-weight:600;")
-        self.idn_lbl.setText(f"IDN: {idn}"); self.idn_lbl.setStyleSheet("color:#94a3b8;font-size:11px;")
+        self.idn_lbl.setText(f"IDN: {idn}"); self.idn_lbl.setStyleSheet("color:#8892a4;font-size:11px;")
         self.conn_btn.setText("✗  Disconnect"); self.conn_btn.setEnabled(True)
         self.conn_btn.clicked.disconnect(); self.conn_btn.clicked.connect(self._disconnect)
         self._log_msg(f"Connected → {idn}")
@@ -686,11 +686,11 @@ class SingleHexapodWidget(QWidget):
             try: self._drv.disconnect()
             except: pass
             self._drv = None
-        self.status_lbl.setText("○  Disconnected"); self.status_lbl.setStyleSheet("color:#64748b;font-size:12px;")
+        self.status_lbl.setText("○  Disconnected"); self.status_lbl.setStyleSheet("color:#4a5568;font-size:12px;")
         self.idn_lbl.setText("IDN: —")
         self.conn_btn.setText("⟳  Connect")
         self.conn_btn.clicked.disconnect(); self.conn_btn.clicked.connect(self._connect)
-        self._log_msg("Disconnected","#64748b")
+        self._log_msg("Disconnected","#4a5568")
 
     # ── Position ──────────────────────────────────
     def _refresh_pos(self):
@@ -850,10 +850,10 @@ class HexapodPanel(QWidget):
 
         self.tabs = QTabWidget()
         self.tabs.setStyleSheet("""
-            QTabWidget::pane{border:none;background:#1a1d24;}
-            QTabBar::tab{background:#20242e;color:#64748b;padding:8px 20px;border:1px solid #3a4055;font-size:12px;min-width:90px;}
-            QTabBar::tab:selected{background:#1a1d24;color:#4a9eff;border-bottom:2px solid #4a9eff;}
-            QTabBar::tab:hover{color:#94a3b8;}
+            QTabWidget::pane{border:none;background:#111318;}
+            QTabBar::tab{background:#0d0f14;color:#4a5568;padding:8px 20px;border:1px solid #1e2433;font-size:12px;min-width:90px;}
+            QTabBar::tab:selected{background:#111318;color:#4a9eff;border-bottom:2px solid #4a9eff;}
+            QTabBar::tab:hover{color:#8892a4;}
         """)
         self.tabs.tabBarClicked.connect(self._tab_clicked)
         layout.addWidget(self.tabs)
@@ -866,7 +866,7 @@ class HexapodPanel(QWidget):
         self._count += 1
         widget = SingleHexapodWidget(self._count)
         scroll = QScrollArea(); scroll.setWidgetResizable(True)
-        scroll.setStyleSheet("background:#1a1d24;"); scroll.setWidget(widget)
+        scroll.setStyleSheet("background:#111318;"); scroll.setWidget(widget)
         insert_at = self.tabs.count()
         for i in range(self.tabs.count()):
             if self.tabs.tabText(i) == "＋": insert_at=i; break

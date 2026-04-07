@@ -10,9 +10,9 @@ class BlankPage(QWidget):
         layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.setSpacing(10)
         for text, color, size, bold in [
-            (icon,                "#3a4055", 40, False),
-            (title,               "#64748b", 15, True),
-            ("Under construction", "#3a4055", 11, False),
+            (icon,                "#1e2433", 40, False),
+            (title,               "#2a3444", 15, True),
+            ("Under construction", "#1e2433", 11, False),
         ]:
             w = lbl(text, color, size, bold)
             w.setAlignment(Qt.AlignmentFlag.AlignCenter)

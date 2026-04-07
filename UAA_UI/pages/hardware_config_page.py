@@ -32,16 +32,16 @@ class DeviceTab(QPushButton):
         c = self._color
         self.setStyleSheet(f"""
             QPushButton {{
-                background: {'#1e2d47' if checked else '#20242e'};
-                border: 1px solid {''+c if checked else '#3a4055'};
+                background: {'#0d1520' if checked else '#0d0f14'};
+                border: 1px solid {''+c if checked else '#1e2433'};
                 border-radius: 6px;
                 text-align: left;
                 padding-left: 14px;
-                color: {''+c if checked else '#94a3b8'};
+                color: {''+c if checked else '#8892a4'};
                 font-size: 13px;
                 font-weight: {'600' if checked else '400'};
             }}
-            QPushButton:hover {{ border-color: {c}; color: {c}; background: #1e2d47; }}
+            QPushButton:hover {{ border-color: {c}; color: {c}; background: #0d1520; }}
         """)
         dot = "● " if checked else "○ "
         self.setText(dot + self._name)
@@ -58,9 +58,9 @@ class EmptyPanel(QWidget):
 
         ico = lbl("⚙", color, 36)
         ico.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        ttl = lbl(title, "#64748b", 14, True)
+        ttl = lbl(title, "#2a3444", 14, True)
         ttl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        sub = lbl("Configuration panel — coming soon", "#3a4055", 11)
+        sub = lbl("Configuration panel — coming soon", "#1e2433", 11)
         sub.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         layout.addWidget(ico)
@@ -81,7 +81,7 @@ class HardwareConfigPage(QWidget):
 
         # Title + Save
         top = QHBoxLayout()
-        top.addWidget(lbl("HARDWARE CONFIGURATION", "#e2e8f0", 14, True))
+        top.addWidget(lbl("HARDWARE CONFIGURATION", "#c5cdd9", 14, True))
         top.addStretch()
         save_btn = QPushButton("💾   Save All")
         save_btn.setFixedHeight(32)
@@ -111,7 +111,7 @@ class HardwareConfigPage(QWidget):
         self._panels = []
 
         devices = [
-            ("Summary",       "#94a3b8", True,  "sum"),
+            ("Summary",       "#8892a4", True,  "sum"),
             ("Power Supply",  "#3b82f6", True,  "psu"),
             ("Hexapod",       "#4a9eff", True,  "hxp"),
             ("Linear Stage",  "#38bdf8", True,  "lin"),
@@ -126,8 +126,8 @@ class HardwareConfigPage(QWidget):
         self.stack = QStackedWidget()
         self.stack.setStyleSheet("""
             QStackedWidget {
-                background: #20242e;
-                border: 1px solid #3a4055;
+                background: #0d0f14;
+                border: 1px solid #1e2433;
                 border-radius: 6px;
             }
         """)
@@ -180,9 +180,9 @@ class HardwareConfigPage(QWidget):
         add_btn.setStyleSheet("""
             QPushButton {
                 background: transparent;
-                border: 1px dashed #3a4055;
+                border: 1px dashed #1e2433;
                 border-radius: 6px;
-                color: #64748b; font-size: 12px;
+                color: #4a5568; font-size: 12px;
             }
             QPushButton:hover { border-color: #4a9eff; color: #4a9eff; }
         """)

@@ -30,48 +30,48 @@ def _btn(text, color="#4a9eff", h=26, w=None):
     b = QPushButton(text)
     if h: b.setFixedHeight(h)
     if w: b.setFixedWidth(w)
-    bg = {"#4a9eff":"#1e2d47","#22c55e":"#1a3a1a",
-          "#ef4444":"#1a0000","#eab308":"#1a1000"}.get(color,"#2a2f3d")
+    bg = {"#4a9eff":"#0d1520","#22c55e":"#1a3a1a",
+          "#ef4444":"#1a0000","#eab308":"#1a1000"}.get(color,"#161b22")
     b.setStyleSheet(
         f"QPushButton{{background:{bg};border:1px solid {color};"
         f"border-radius:4px;color:{color};font-size:11px;font-weight:600;padding:0 8px;}}"
         f"QPushButton:hover{{background:{color};color:#000;}}"
-        f"QPushButton:disabled{{border-color:#3a4055;color:#64748b;background:#16191f;}}")
+        f"QPushButton:disabled{{border-color:#1e2433;color:#2a3444;background:#0a0c10;}}")
     return b
 
 def _jb(text, size=34, color="#4a9eff"):
     b = QPushButton(text); b.setFixedSize(size, size)
     b.setStyleSheet(
-        f"QPushButton{{background:#2a2f3d;border:1px solid #3a4055;"
-        f"border-radius:4px;color:#94a3b8;font-size:14px;}}"
-        f"QPushButton:hover{{border-color:{color};color:{color};background:#1e2d47;}}"
+        f"QPushButton{{background:#161b22;border:1px solid #1e2433;"
+        f"border-radius:4px;color:#8892a4;font-size:14px;}}"
+        f"QPushButton:hover{{border-color:{color};color:{color};background:#0d1520;}}"
         f"QPushButton:pressed{{background:{color}33;}}")
     return b
 
 def _nin(val="0.000", w=64):
     e = QLineEdit(val); e.setFixedWidth(w); e.setFixedHeight(22)
     e.setStyleSheet(
-        "background:#2a2f3d;border:1px solid #3a4055;border-radius:3px;"
-        "color:#e2e8f0;padding:1px 4px;font-size:10px;font-family:monospace;")
+        "background:#161b22;border:1px solid #1e2433;border-radius:3px;"
+        "color:#c5cdd9;padding:1px 4px;font-size:10px;font-family:monospace;")
     return e
 
 def _combo(items, w=80):
     c = QComboBox(); c.addItems(items)
     c.setFixedWidth(w); c.setFixedHeight(22)
     c.setStyleSheet(
-        "QComboBox{background:#2a2f3d;border:1px solid #3a4055;border-radius:3px;"
-        "color:#e2e8f0;padding:0px 4px;font-size:10px;}"
+        "QComboBox{background:#161b22;border:1px solid #1e2433;border-radius:3px;"
+        "color:#c5cdd9;padding:0px 4px;font-size:10px;}"
         "QComboBox::drop-down{border:none;}"
-        "QComboBox QAbstractItemView{background:#20242e;color:#e2e8f0;font-size:10px;}")
+        "QComboBox QAbstractItemView{background:#0d0f14;color:#c5cdd9;font-size:10px;}")
     return c
 
 def _hline():
     f = QFrame(); f.setFrameShape(QFrame.Shape.HLine)
-    f.setStyleSheet("background:#3a4055;max-height:1px;"); return f
+    f.setStyleSheet("background:#1e2433;max-height:1px;"); return f
 
 def _vline():
     f = QFrame(); f.setFrameShape(QFrame.Shape.VLine)
-    f.setStyleSheet("color:#3a4055;"); f.setFixedWidth(1); return f
+    f.setStyleSheet("color:#1e2433;"); f.setFixedWidth(1); return f
 
 
 STEP_MAP = {
@@ -100,13 +100,13 @@ class PosInline(QFrame):
     def __init__(self, axis, color, unit="mm"):
         super().__init__()
         self.setStyleSheet(
-            "QFrame{background:#16191f;border:1px solid #3a4055;border-radius:3px;}")
+            "QFrame{background:#0a0c10;border:1px solid #1e2433;border-radius:3px;}")
         h = QHBoxLayout(self); h.setContentsMargins(6,3,6,3); h.setSpacing(3)
         al = QLabel(axis); al.setFont(QFont("Consolas",9,700))
         al.setStyleSheet(f"color:{color};background:transparent;"); al.setFixedWidth(12)
         self._v = QLabel("0.0000"); self._v.setFont(QFont("Consolas",11,700))
         self._v.setStyleSheet(f"color:{color};background:transparent;")
-        ul = lbl(unit,"#64748b",8)
+        ul = lbl(unit,"#2a3444",8)
         h.addWidget(al); h.addWidget(self._v,1); h.addWidget(ul)
 
     def set_val(self, v, fmt=".4f"):
@@ -124,23 +124,23 @@ class GoToDialog(QDialog):
         self.setFixedWidth(300)
         self._axes = axes
         v = QVBoxLayout(self); v.setSpacing(10)
-        v.addWidget(lbl("Enter target position:","#94a3b8",12))
+        v.addWidget(lbl("Enter target position:","#8892a4",12))
 
         self._edits = {}
         form = QFormLayout(); form.setSpacing(8)
         for ax in axes:
-            color = AXIS_COLORS.get(ax,"#e2e8f0")
+            color = AXIS_COLORS.get(ax,"#c5cdd9")
             lbl_w = QLabel(ax); lbl_w.setFont(QFont("Consolas",11,700))
             lbl_w.setStyleSheet(f"color:{color};")
             e = QLineEdit("0.000")
             e.setStyleSheet(
-                f"border-left:2px solid {color};background:#2a2f3d;"
-                "border-top:1px solid #3a4055;border-right:1px solid #3a4055;"
-                "border-bottom:1px solid #3a4055;border-radius:4px;"
-                "color:#e2e8f0;padding:5px 8px;font-size:12px;font-family:monospace;")
+                f"border-left:2px solid {color};background:#161b22;"
+                "border-top:1px solid #1e2433;border-right:1px solid #1e2433;"
+                "border-bottom:1px solid #1e2433;border-radius:4px;"
+                "color:#c5cdd9;padding:5px 8px;font-size:12px;font-family:monospace;")
             self._edits[ax] = e
             unit = "mm" if ax in "XYZ—" else "°"
-            unit_lbl = lbl(unit,"#64748b",10)
+            unit_lbl = lbl(unit,"#4a5568",10)
             row = QHBoxLayout()
             row.addWidget(e,1); row.addWidget(unit_lbl)
             form.addRow(lbl_w, row)
@@ -210,14 +210,14 @@ class CameraWidget(QFrame):
         # Header
         hdr = QFrame()
         hdr.setStyleSheet(
-            "QFrame{background:#16191f;border:none;border-bottom:1px solid #3a4055;}")
+            "QFrame{background:#0a0c10;border:none;border-bottom:1px solid #1e2433;}")
         hh = QHBoxLayout(hdr); hh.setContentsMargins(10,6,10,6); hh.setSpacing(8)
         self._dot = QFrame(); self._dot.setFixedSize(8,8)
         self._dot.setStyleSheet(
             "QFrame{background:#3d0a0a;border-radius:4px;border:none;}")
-        self._sig = lbl("No signal","#64748b",11)
+        self._sig = lbl("No signal","#4a5568",11)
         hh.addWidget(self._dot); hh.addWidget(self._sig); hh.addStretch()
-        hh.addWidget(lbl("Crosshair","#64748b",9))
+        hh.addWidget(lbl("Crosshair","#4a5568",9))
         self._ch_cb = _combo(["Cross","Dot","Full+circle","None"],w=100)
         self._ch_cb.currentTextChanged.connect(
             lambda t: setattr(self,"_ch_style",t.lower()))
@@ -237,7 +237,7 @@ class CameraWidget(QFrame):
         self._view.setSizePolicy(
             QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self._view.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._view.setStyleSheet("background:#16191f;color:#64748b;font-size:13px;")
+        self._view.setStyleSheet("background:#0a0c10;color:#2a3444;font-size:13px;")
         self._view.setText("📷  Camera not connected\nClick to set crosshair")
         self._view.clicked.connect(self._on_click)
         self._view.mouse_move.connect(self._on_mouse)
@@ -246,30 +246,30 @@ class CameraWidget(QFrame):
         # Bottom bar
         bot = QFrame()
         bot.setStyleSheet(
-            "QFrame{background:#16191f;border:none;border-top:1px solid #3a4055;}")
+            "QFrame{background:#0a0c10;border:none;border-top:1px solid #1e2433;}")
         bh = QHBoxLayout(bot); bh.setContentsMargins(10,4,10,4); bh.setSpacing(8)
         self._ch_lbl   = lbl("960,540 px","#4a9eff",10)
-        self._m_lbl    = lbl("—,— px","#64748b",10)
-        self._cart_lbl = lbl("X:— Y:— Z:—","#64748b",10)
-        self._hxp_lbl  = lbl("X:— Y:—","#64748b",10)
+        self._m_lbl    = lbl("—,— px","#4a5568",10)
+        self._cart_lbl = lbl("X:— Y:— Z:—","#4a5568",10)
+        self._hxp_lbl  = lbl("X:— Y:—","#4a5568",10)
         self._fps_lbl  = lbl("— fps","#22c55e",10)
         for f in [self._ch_lbl,self._m_lbl,self._cart_lbl,self._hxp_lbl]:
             f.setFont(QFont("Consolas",10))
         bh.addWidget(lbl("⊕","#4a9eff",11,True)); bh.addWidget(self._ch_lbl)
         bh.addWidget(_vline())
-        bh.addWidget(lbl("Mouse","#64748b",9)); bh.addWidget(self._m_lbl)
+        bh.addWidget(lbl("Mouse","#4a5568",9)); bh.addWidget(self._m_lbl)
         bh.addWidget(_vline())
-        bh.addWidget(lbl("Cart","#64748b",9)); bh.addWidget(self._cart_lbl)
+        bh.addWidget(lbl("Cart","#4a5568",9)); bh.addWidget(self._cart_lbl)
         bh.addWidget(_vline())
-        bh.addWidget(lbl("Hxp","#64748b",9)); bh.addWidget(self._hxp_lbl)
+        bh.addWidget(lbl("Hxp","#4a5568",9)); bh.addWidget(self._hxp_lbl)
         bh.addWidget(_vline())
         bh.addWidget(self._fps_lbl)
         bh.addStretch()
-        bh.addWidget(lbl("Exp µs","#64748b",9))
+        bh.addWidget(lbl("Exp µs","#4a5568",9))
         self._exp_e = _nin("10000",60); bh.addWidget(self._exp_e)
-        bh.addWidget(lbl("Gain","#64748b",9))
+        bh.addWidget(lbl("Gain","#4a5568",9))
         self._gain_e = _nin("0.0",40); bh.addWidget(self._gain_e)
-        ab = _btn("Apply","#64748b",h=22); ab.clicked.connect(self._apply)
+        ab = _btn("Apply","#4a5568",h=22); ab.clicked.connect(self._apply)
         bh.addWidget(ab)
         v.addWidget(bot)
 
@@ -390,9 +390,9 @@ class QuickIOWidget(QWidget):
         v = QVBoxLayout(self); v.setContentsMargins(0,0,0,0); v.setSpacing(4)
 
         hr = QHBoxLayout()
-        hr.addWidget(lbl("QUICK I/O","#64748b",9,True))
+        hr.addWidget(lbl("QUICK I/O","#4a5568",9,True))
         hr.addStretch()
-        cfg = _btn("⚙","#64748b",h=20,w=24)
+        cfg = _btn("⚙","#4a5568",h=20,w=24)
         cfg.clicked.connect(self._cfg); hr.addWidget(cfg)
         v.addLayout(hr)
 
@@ -400,7 +400,7 @@ class QuickIOWidget(QWidget):
         self._grid   = QGridLayout(self._grid_w)
         self._grid.setSpacing(4)
         v.addWidget(self._grid_w)
-        self._no_lbl = lbl("No channels — ⚙ to configure","#64748b",9)
+        self._no_lbl = lbl("No channels — ⚙ to configure","#2a3444",9)
         self._no_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
         v.addWidget(self._no_lbl)
 
@@ -430,8 +430,8 @@ class QuickIOWidget(QWidget):
             b = QPushButton(f"{'●' if state else '○'}  {short}")
             b.setFixedHeight(28)
             b.setStyleSheet(
-                f"QPushButton{{background:#20242e;border:1px solid #3a4055;"
-                f"border-radius:4px;color:#64748b;font-size:10px;font-weight:600;"
+                f"QPushButton{{background:#0d0f14;border:1px solid #1e2433;"
+                f"border-radius:4px;color:#4a5568;font-size:10px;font-weight:600;"
                 f"text-align:left;padding:0 6px;}}"
                 f"QPushButton:hover{{border-color:{color};color:{color};}}")
             b._ch = ch; b._is_do = is_do; b._state = False
@@ -464,8 +464,8 @@ class QuickIOWidget(QWidget):
                 f"text-align:left;padding:0 6px;}}")
         else:
             btn.setStyleSheet(
-                f"QPushButton{{background:#20242e;border:1px solid #3a4055;"
-                f"border-radius:4px;color:#64748b;font-size:10px;font-weight:600;"
+                f"QPushButton{{background:#0d0f14;border:1px solid #1e2433;"
+                f"border-radius:4px;color:#4a5568;font-size:10px;font-weight:600;"
                 f"text-align:left;padding:0 6px;}}"
                 f"QPushButton:hover{{border-color:{color};color:{color};}}")
 
@@ -495,10 +495,10 @@ class QuickIOWidget(QWidget):
         if not all_chs: return
         dlg = QDialog(); dlg.setWindowTitle("Select I/O Channels"); dlg.setFixedSize(380,360)
         v = QVBoxLayout(dlg)
-        v.addWidget(lbl("Select channels to show:","#94a3b8",11))
+        v.addWidget(lbl("Select channels to show:","#8892a4",11))
         lst = QListWidget()
         lst.setStyleSheet(
-            "QListWidget{background:#20242e;border:1px solid #3a4055;color:#e2e8f0;}"
+            "QListWidget{background:#0d0f14;border:1px solid #1e2433;color:#c5cdd9;}"
             "QListWidget::item{padding:4px 8px;}")
         for ch in all_chs:
             txt=f"[{ch['type'].upper()}] {ch.get('addr',0):05d}  {ch.get('name','')}"
@@ -556,23 +556,23 @@ class UnifiedControl(QFrame):
 
     # ── Device selector ───────────────────────
     def _build_dev_sel(self, v):
-        v.addWidget(lbl("DEVICE","#64748b",9,True))
+        v.addWidget(lbl("DEVICE","#4a5568",9,True))
         row = QHBoxLayout(); row.setSpacing(3)
         self._dev_btns = {}
         for name,color in [("Cartesian","#4ade80"),("Hexapod 1","#4a9eff"),
                             ("Hexapod 2","#4a9eff"),("Linear","#38bdf8")]:
             b = QPushButton(name); b.setCheckable(True); b.setFixedHeight(26)
             b.setStyleSheet(f"""
-                QPushButton{{background:#20242e;border:1px solid #3a4055;
-                    border-radius:4px;color:#64748b;font-size:10px;font-weight:600;padding:0 6px;}}
-                QPushButton:checked{{background:#1e2d47;border-color:{color};color:{color};}}
+                QPushButton{{background:#0d0f14;border:1px solid #1e2433;
+                    border-radius:4px;color:#4a5568;font-size:10px;font-weight:600;padding:0 6px;}}
+                QPushButton:checked{{background:#0d1520;border-color:{color};color:{color};}}
                 QPushButton:hover{{color:{color};}}
             """)
             b.clicked.connect(lambda _,n=name: self._set_device(n))
             self._dev_btns[name]=b; row.addWidget(b)
         v.addLayout(row)
         self._dev_btns["Cartesian"].setChecked(True)
-        self._map_lbl = lbl("▲▼=Y  ◀▶=X  ↕=Z","#64748b",9)
+        self._map_lbl = lbl("▲▼=Y  ◀▶=X  ↕=Z","#4a5568",9)
         v.addWidget(self._map_lbl)
 
     def _set_device(self, name):
@@ -591,7 +591,7 @@ class UnifiedControl(QFrame):
 
     # ── Position ──────────────────────────────
     def _build_pos(self, v):
-        v.addWidget(lbl("POSITION","#64748b",9,True))
+        v.addWidget(lbl("POSITION","#4a5568",9,True))
         self._pos_frame = QFrame()
         self._pos_frame.setStyleSheet("QFrame{background:transparent;border:none;}")
         self._pos_layout = QVBoxLayout(self._pos_frame)
@@ -642,7 +642,7 @@ class UnifiedControl(QFrame):
 
     # ── Jog ───────────────────────────────────
     def _build_jog(self, v):
-        v.addWidget(lbl("JOG","#64748b",9,True))
+        v.addWidget(lbl("JOG","#4a5568",9,True))
 
         # XYZ dpad row
         xyz_row = QHBoxLayout(); xyz_row.setSpacing(8)
@@ -651,7 +651,7 @@ class UnifiedControl(QFrame):
         self._j_lt = _jb("◀"); self._j_rt = _jb("▶")
         ctr = QFrame(); ctr.setFixedSize(34,34)
         ctr.setStyleSheet(
-            "QFrame{background:#1a1d24;border:1px solid #3a4055;border-radius:4px;}")
+            "QFrame{background:#111318;border:1px solid #1e2433;border-radius:4px;}")
         dpad.addWidget(self._j_up,0,1)
         dpad.addWidget(self._j_lt,1,0)
         dpad.addWidget(ctr,1,1)
@@ -672,7 +672,7 @@ class UnifiedControl(QFrame):
         # Step + Velocity
         sv = QVBoxLayout(); sv.setSpacing(4)
         r1 = QHBoxLayout(); r1.setSpacing(4)
-        r1.addWidget(lbl("Step","#64748b",9))
+        r1.addWidget(lbl("Step","#4a5568",9))
         self._step_e = _nin("0.010",56)
         self._step_e.textChanged.connect(
             lambda t: setattr(self,"_step",float(t) if t else 0.010))
@@ -682,7 +682,7 @@ class UnifiedControl(QFrame):
         r1.addWidget(self._step_e); r1.addWidget(self._step_cb)
         sv.addLayout(r1)
         r2 = QHBoxLayout(); r2.setSpacing(4)
-        r2.addWidget(lbl("Vel","#64748b",9))
+        r2.addWidget(lbl("Vel","#4a5568",9))
         self._vel_e = _nin("1.000",56)
         self._vel_e.textChanged.connect(
             lambda t: setattr(self,"_vel",float(t) if t else 1.0))
@@ -699,14 +699,14 @@ class UnifiedControl(QFrame):
         self._uvw_frame.setStyleSheet("QFrame{background:transparent;border:none;}")
         uf = QVBoxLayout(self._uvw_frame); uf.setContentsMargins(0,4,0,0); uf.setSpacing(4)
         uf.addWidget(_hline())
-        uf.addWidget(lbl("U / V / W  (rotation)","#64748b",9,True))
+        uf.addWidget(lbl("U / V / W  (rotation)","#4a5568",9,True))
         uvw_btns = QHBoxLayout(); uvw_btns.setSpacing(4)
         for ax,color in [("U","#f87171"),("V","#fb923c"),("W","#facc15")]:
             bm = QPushButton(f"◀ {ax}"); bp = QPushButton(f"{ax} ▶")
             for b,d in [(bm,-1),(bp,1)]:
                 b.setFixedHeight(28)
                 b.setStyleSheet(
-                    f"QPushButton{{background:#2a2f3d;border:1px solid {color}33;"
+                    f"QPushButton{{background:#161b22;border:1px solid {color}33;"
                     f"border-radius:4px;color:{color};font-size:11px;font-weight:600;padding:0 6px;}}"
                     f"QPushButton:hover{{background:{color};color:#000;}}"
                     f"QPushButton:pressed{{background:{color}55;}}")
@@ -853,11 +853,11 @@ class MotionControlPage(QWidget):
         # ── Left scroll panel ─────────────────
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
-        scroll.setFixedWidth(400)
+        scroll.setFixedWidth(520)
         scroll.setStyleSheet(
-            "QScrollArea{background:#20242e;border:1px solid #3a4055;border-radius:6px;}"
-            "QScrollBar:vertical{width:6px;background:#16191f;}"
-            "QScrollBar::handle:vertical{background:#3a4055;border-radius:3px;}")
+            "QScrollArea{background:#0d0f14;border:1px solid #1e2433;border-radius:6px;}"
+            "QScrollBar:vertical{width:6px;background:#0a0c10;}"
+            "QScrollBar::handle:vertical{background:#1e2433;border-radius:3px;}")
         inner = QWidget(); inner.setStyleSheet("background:transparent;")
         sv = QVBoxLayout(inner); sv.setContentsMargins(12,12,12,12); sv.setSpacing(8)
 
@@ -875,17 +875,18 @@ class MotionControlPage(QWidget):
         sv.addWidget(self._qio)
         sv.addStretch()
 
-        scroll.setWidget(inner)
-        root.addWidget(scroll)
-
-        # ── Right: Camera ─────────────────────
+        # ── Left: Camera ─────────────────────
         cam_frame = QFrame()
         cam_frame.setStyleSheet(
-            "QFrame{background:#20242e;border:1px solid #3a4055;border-radius:6px;}")
+            "QFrame{background:#0d0f14;border:1px solid #1e2433;border-radius:6px;}")
         cv = QVBoxLayout(cam_frame); cv.setContentsMargins(0,0,0,0); cv.setSpacing(0)
         self._cam_w = CameraWidget(self._cam_ref, self._cart_drv, self._hxp_drvs)
         cv.addWidget(self._cam_w)
         root.addWidget(cam_frame,1)
+
+        # ── Left: Control ─────────────────────
+        scroll.setWidget(inner)
+        root.addWidget(scroll)
 
     def _build_status(self, layout):
         bar = QHBoxLayout(); bar.setSpacing(5)
@@ -894,11 +895,11 @@ class MotionControlPage(QWidget):
               ("Camera","#eab308"),("WAGO","#38bdf8")]
         for name,color in devs:
             f=QFrame()
-            f.setStyleSheet("QFrame{background:#16191f;border:1px solid #3a4055;border-radius:4px;}")
+            f.setStyleSheet("QFrame{background:#0a0c10;border:1px solid #1e2433;border-radius:4px;}")
             h=QHBoxLayout(f); h.setContentsMargins(5,3,5,3); h.setSpacing(4)
             dot=QFrame(); dot.setFixedSize(7,7)
             dot.setStyleSheet("QFrame{background:#3d0a0a;border-radius:3px;border:none;}")
-            h.addWidget(dot); h.addWidget(lbl(name,"#64748b",9))
+            h.addWidget(dot); h.addWidget(lbl(name,"#4a5568",9))
             bar.addWidget(f)
         bar.addStretch()
         halt=QPushButton("⛔ HALT ALL"); halt.setFixedHeight(28)

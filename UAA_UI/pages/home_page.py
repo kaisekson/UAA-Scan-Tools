@@ -15,8 +15,8 @@ class DeviceStatusBar(QFrame):
         super().__init__()
         self.setStyleSheet("""
             QFrame {
-                background: #20242e;
-                border: 1px solid #3a4055;
+                background: #0d0f14;
+                border: 1px solid #1e2433;
                 border-radius: 6px;
             }
         """)
@@ -25,7 +25,7 @@ class DeviceStatusBar(QFrame):
         layout.setContentsMargins(14, 0, 14, 0)
         layout.setSpacing(20)
 
-        self._total   = lbl("● 0 devices", "#94a3b8", 12)
+        self._total   = lbl("● 0 devices", "#8892a4", 12)
         self._online  = lbl("✓ 0 online",  "#22c55e", 12)
         self._offline = lbl("✗ 0 offline", "#ef4444", 12)
 
@@ -33,11 +33,11 @@ class DeviceStatusBar(QFrame):
         details_btn.setFixedHeight(26)
         details_btn.setStyleSheet("""
             QPushButton {
-                background: transparent; border: 1px solid #3a4055;
+                background: transparent; border: 1px solid #1e2433;
                 border-radius: 4px; color: #4a9eff;
                 font-size: 11px; padding: 0 10px;
             }
-            QPushButton:hover { border-color: #4a9eff; background: #1e2d47; }
+            QPushButton:hover { border-color: #4a9eff; background: #0d1520; }
         """)
         details_btn.clicked.connect(self.details_clicked.emit)
 
@@ -52,7 +52,7 @@ class DeviceStatusBar(QFrame):
         self._online.setText(f"✓ {online} online")
         self._offline.setText(f"✗ {offline} offline")
         self._offline.setStyleSheet(
-            f"color:{'#ef4444' if offline > 0 else '#64748b'}; font-size:12px;"
+            f"color:{'#ef4444' if offline > 0 else '#4a5568'}; font-size:12px;"
         )
 
 
@@ -68,8 +68,8 @@ class HomePage(QWidget):
         # Greeting
         hour   = datetime.datetime.now().hour
         greet  = "Good morning" if hour < 12 else "Good afternoon" if hour < 18 else "Good evening"
-        layout.addWidget(lbl(f"{greet}, Kai", "#e2e8f0", 16, True))
-        layout.addWidget(lbl("UAA M3  —  Newark CA", "#64748b", 11))
+        layout.addWidget(lbl(f"{greet}, Kai", "#c5cdd9", 16, True))
+        layout.addWidget(lbl("UAA M3  —  Newark CA", "#4a5568", 11))
         layout.addWidget(divider())
 
         # Device status bar
@@ -81,7 +81,7 @@ class HomePage(QWidget):
         layout.addWidget(divider())
 
         # Section label
-        layout.addWidget(lbl("MODULES", "#64748b", 10, True))
+        layout.addWidget(lbl("MODULES", "#4a5568", 10, True))
 
         # Menu grid 3 columns
         grid = QGridLayout()
@@ -93,7 +93,7 @@ class HomePage(QWidget):
             ("🗄️", "Database Setup",  "Connection & table config",   "#a855f7", True,  3),
             ("📡", "Scan Monitor",    "Y-Z scan & realtime plot",    "#eab308", True,  4),
             ("📊", "Data Log",        "History & export CSV",        "#22c55e", True,  5),
-            ("＋", "Add Module",      "Extend system",               "#64748b", False, 0),
+            ("＋", "Add Module",      "Extend system",               "#2a3444", False, 0),
         ]
 
         for i, (icon, title, sub, color, enabled, idx) in enumerate(menus):

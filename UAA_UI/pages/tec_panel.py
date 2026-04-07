@@ -124,7 +124,7 @@ class PollWorker(QThread):
 # ══════════════════════════════════════════════
 
 class CollapsibleSection(QFrame):
-    def __init__(self, title, color="#64748b"):
+    def __init__(self, title, color="#4a5568"):
         super().__init__()
         self.setStyleSheet("QFrame{background:transparent;border:none;}")
         self._layout = QVBoxLayout(self)
@@ -135,10 +135,10 @@ class CollapsibleSection(QFrame):
         self._btn.setCheckable(True)
         self._btn.setFixedHeight(30)
         self._btn.setStyleSheet(f"""
-            QPushButton{{background:#20242e;border:1px solid #3a4055;
+            QPushButton{{background:#0d0f14;border:1px solid #1e2433;
                 border-radius:5px;color:{color};font-size:11px;font-weight:600;
                 text-align:left;padding-left:12px;}}
-            QPushButton:checked{{background:#1a1d24;border-color:{color};
+            QPushButton:checked{{background:#111318;border-color:{color};
                 border-radius:5px 5px 0 0;}}
             QPushButton:hover{{border-color:{color};}}
         """)
@@ -147,7 +147,7 @@ class CollapsibleSection(QFrame):
 
         self._content = QFrame()
         self._content.setStyleSheet(
-            f"QFrame{{background:#20242e;border:1px solid #3a4055;"
+            f"QFrame{{background:#0d0f14;border:1px solid #1e2433;"
             f"border-top:none;border-radius:0 0 5px 5px;}}")
         self._content.setVisible(False)
         self._cl = QVBoxLayout(self._content)
@@ -172,10 +172,10 @@ class ReadCard(QFrame):
     def __init__(self, label, unit, color, big=False):
         super().__init__()
         self.setStyleSheet(
-            "QFrame{background:#16191f;border:1px solid #3a4055;border-radius:6px;}")
+            "QFrame{background:#0a0c10;border:1px solid #1e2433;border-radius:6px;}")
         v = QVBoxLayout(self)
         v.setContentsMargins(12,8,12,8); v.setSpacing(3)
-        v.addWidget(lbl(label,"#64748b",9,True))
+        v.addWidget(lbl(label,"#4a5568",9,True))
         row = QHBoxLayout(); row.setSpacing(6)
         size = 24 if big else 18
         self._val = QLabel("—")
@@ -194,7 +194,7 @@ class ReadCard(QFrame):
                 "QFrame{background:#1a0e00;border:1px solid #854f0b;border-radius:6px;}")
         else:
             self.setStyleSheet(
-                "QFrame{background:#16191f;border:1px solid #3a4055;border-radius:6px;}")
+                "QFrame{background:#0a0c10;border:1px solid #1e2433;border-radius:6px;}")
 
 
 # ══════════════════════════════════════════════
@@ -209,7 +209,7 @@ class TECPanel(QWidget):
 
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
-        scroll.setStyleSheet("background:#1a1d24;border:none;")
+        scroll.setStyleSheet("background:#111318;border:none;")
         inner  = QWidget()
         layout = QVBoxLayout(inner)
         layout.setContentsMargins(16,14,16,14)
@@ -235,9 +235,9 @@ class TECPanel(QWidget):
     # ── Helpers ───────────────────────────────
     def _sh(self, layout, title, extra=None):
         row = QHBoxLayout(); row.setSpacing(8)
-        row.addWidget(lbl(title,"#64748b",10,True))
+        row.addWidget(lbl(title,"#4a5568",10,True))
         line = QFrame(); line.setFrameShape(QFrame.Shape.HLine)
-        line.setStyleSheet("background:#3a4055;max-height:1px;")
+        line.setStyleSheet("background:#1e2433;max-height:1px;")
         row.addWidget(line,1)
         if extra: row.addWidget(extra)
         layout.addLayout(row)
@@ -246,43 +246,43 @@ class TECPanel(QWidget):
         ts = datetime.datetime.now().strftime("%H:%M:%S")
         self._log.append(
             f'<span style="color:{color};">[{ts}]</span> '
-            f'<span style="color:#94a3b8;">{msg}</span>')
+            f'<span style="color:#8892a4;">{msg}</span>')
 
     def _input_style(self, color="#4a9eff"):
-        return (f"border-left:2px solid {color};background:#2a2f3d;"
-                "border-top:1px solid #3a4055;border-right:1px solid #3a4055;"
-                "border-bottom:1px solid #3a4055;border-radius:4px;"
-                "color:#e2e8f0;padding:5px 8px;font-size:12px;font-family:monospace;")
+        return (f"border-left:2px solid {color};background:#161b22;"
+                "border-top:1px solid #1e2433;border-right:1px solid #1e2433;"
+                "border-bottom:1px solid #1e2433;border-radius:4px;"
+                "color:#c5cdd9;padding:5px 8px;font-size:12px;font-family:monospace;")
 
     # ── Connection ────────────────────────────
     def _build_connection(self, layout):
         self._sh(layout,"CONNECTION")
         card = QFrame()
         card.setStyleSheet(
-            "QFrame{background:#20242e;border:1px solid #3a4055;border-radius:6px;}")
+            "QFrame{background:#0d0f14;border:1px solid #1e2433;border-radius:6px;}")
         v = QVBoxLayout(card); v.setContentsMargins(12,10,12,10); v.setSpacing(8)
 
         # Resource selector
         row = QHBoxLayout(); row.setSpacing(10)
         f = QFrame(); fv = QVBoxLayout(f)
         fv.setContentsMargins(0,0,0,0); fv.setSpacing(3)
-        fv.addWidget(lbl("USB Resource","#64748b",10))
+        fv.addWidget(lbl("USB Resource","#4a5568",10))
         self._res_combo = QComboBox()
         self._res_combo.setEditable(True)
         self._res_combo.setStyleSheet(
-            "QComboBox{background:#2a2f3d;border:1px solid #3a4055;"
+            "QComboBox{background:#161b22;border:1px solid #1e2433;"
             "border-left:2px solid #4a9eff;border-radius:4px;"
-            "color:#e2e8f0;padding:4px 8px;font-size:12px;}"
+            "color:#c5cdd9;padding:4px 8px;font-size:12px;}"
             "QComboBox::drop-down{border:none;}"
-            "QComboBox QAbstractItemView{background:#20242e;color:#e2e8f0;}")
+            "QComboBox QAbstractItemView{background:#0d0f14;color:#c5cdd9;}")
         fv.addWidget(self._res_combo)
         row.addWidget(f,1)
 
         scan_btn = QPushButton("⟳ Scan")
         scan_btn.setFixedSize(70,30)
         scan_btn.setStyleSheet(
-            "QPushButton{background:#2a2f3d;border:1px solid #3a4055;"
-            "border-radius:4px;color:#94a3b8;font-size:11px;}"
+            "QPushButton{background:#161b22;border:1px solid #1e2433;"
+            "border-radius:4px;color:#8892a4;font-size:11px;}"
             "QPushButton:hover{border-color:#4a9eff;color:#4a9eff;}")
         scan_btn.clicked.connect(self._scan)
         row.addWidget(scan_btn)
@@ -292,13 +292,13 @@ class TECPanel(QWidget):
         self.conn_btn = QPushButton("⟳  Connect")
         self.conn_btn.setFixedHeight(30)
         self.conn_btn.setStyleSheet(
-            "QPushButton{background:#1e2d47;border:1px solid #4a9eff;"
+            "QPushButton{background:#0d1520;border:1px solid #4a9eff;"
             "border-radius:5px;color:#4a9eff;font-size:12px;font-weight:600;padding:0 14px;}"
             "QPushButton:hover{background:#4a9eff;color:#000;}"
-            "QPushButton:disabled{border-color:#3a4055;color:#64748b;background:#16191f;}")
+            "QPushButton:disabled{border-color:#1e2433;color:#2a3444;background:#0a0c10;}")
         self.conn_btn.clicked.connect(self._connect)
-        self.status_lbl = lbl("○  Disconnected","#64748b",12)
-        self.idn_lbl    = lbl("IDN: —","#64748b",11)
+        self.status_lbl = lbl("○  Disconnected","#4a5568",12)
+        self.idn_lbl    = lbl("IDN: —","#2a3444",11)
         cr.addWidget(self.conn_btn); cr.addWidget(self.status_lbl)
         cr.addStretch(); cr.addWidget(self.idn_lbl)
         v.addLayout(cr)
@@ -313,21 +313,21 @@ class TECPanel(QWidget):
         self._sh(layout,"TEMPERATURE CONTROL")
         card = QFrame()
         card.setStyleSheet(
-            "QFrame{background:#20242e;border:1px solid #3a4055;border-radius:6px;}")
+            "QFrame{background:#0d0f14;border:1px solid #1e2433;border-radius:6px;}")
         v = QVBoxLayout(card); v.setContentsMargins(14,12,14,12); v.setSpacing(10)
 
         # Setpoint row
         sp_row = QHBoxLayout(); sp_row.setSpacing(10)
-        sp_row.addWidget(lbl("Setpoint","#64748b",10))
+        sp_row.addWidget(lbl("Setpoint","#4a5568",10))
         self._setpoint_edit = QLineEdit("25.000")
         self._setpoint_edit.setFixedWidth(100)
         self._setpoint_edit.setStyleSheet(self._input_style("#4a9eff"))
         sp_row.addWidget(self._setpoint_edit)
-        sp_row.addWidget(lbl("°C","#64748b",11))
+        sp_row.addWidget(lbl("°C","#2a3444",11))
         set_btn = QPushButton("Set")
         set_btn.setFixedHeight(30)
         set_btn.setStyleSheet(
-            "QPushButton{background:#1e2d47;border:1px solid #4a9eff;"
+            "QPushButton{background:#0d1520;border:1px solid #4a9eff;"
             "border-radius:4px;color:#4a9eff;font-size:12px;font-weight:600;padding:0 14px;}"
             "QPushButton:hover{background:#4a9eff;color:#000;}")
         set_btn.clicked.connect(self._set_temp)
@@ -347,7 +347,7 @@ class TECPanel(QWidget):
         # Readback cards
         cards_row = QHBoxLayout(); cards_row.setSpacing(10)
         self._actual_card  = ReadCard("ACTUAL TEMP",   "°C", "#4a9eff", big=True)
-        self._sp_card      = ReadCard("SETPOINT",      "°C", "#94a3b8")
+        self._sp_card      = ReadCard("SETPOINT",      "°C", "#8892a4")
         self._delta_card   = ReadCard("DELTA",         "°C", "#cba6f7")
         cards_row.addWidget(self._actual_card, 2)
         cards_row.addWidget(self._sp_card,    1)
@@ -361,7 +361,7 @@ class TECPanel(QWidget):
         mon_row = QHBoxLayout(); mon_row.setSpacing(10)
         self._curr_card = ReadCard("TEC CURRENT", "A", "#22c55e")
         self._volt_card = ReadCard("TEC VOLTAGE", "V", "#eab308")
-        self._outp_card = ReadCard("OUTPUT",      "",  "#64748b")
+        self._outp_card = ReadCard("OUTPUT",      "",  "#4a5568")
         self._outp_card._val.setFont(QFont("Consolas",14,700))
         mon_row.addWidget(self._curr_card)
         mon_row.addWidget(self._volt_card)
@@ -380,7 +380,7 @@ class TECPanel(QWidget):
             ("d", "D (Derivative)",   "0.0"),
         ]:
             col = QVBoxLayout(); col.setSpacing(4)
-            col.addWidget(lbl(lbl_txt,"#64748b",10))
+            col.addWidget(lbl(lbl_txt,"#4a5568",10))
             e = QLineEdit(default)
             e.setStyleSheet(self._input_style("#cba6f7"))
             self._pid_edits[key] = e
@@ -400,16 +400,16 @@ class TECPanel(QWidget):
         read_btn = QPushButton("Read PID")
         read_btn.setFixedHeight(28)
         read_btn.setStyleSheet(
-            "QPushButton{background:#2a2f3d;border:1px solid #3a4055;"
-            "border-radius:4px;color:#94a3b8;font-size:11px;padding:0 12px;}"
+            "QPushButton{background:#161b22;border:1px solid #1e2433;"
+            "border-radius:4px;color:#8892a4;font-size:11px;padding:0 12px;}"
             "QPushButton:hover{border-color:#cba6f7;color:#cba6f7;}")
         read_btn.clicked.connect(self._read_pid)
 
         auto_btn = QPushButton("Auto PID")
         auto_btn.setFixedHeight(28)
         auto_btn.setStyleSheet(
-            "QPushButton{background:#2a2f3d;border:1px solid #3a4055;"
-            "border-radius:4px;color:#94a3b8;font-size:11px;padding:0 12px;}"
+            "QPushButton{background:#161b22;border:1px solid #1e2433;"
+            "border-radius:4px;color:#8892a4;font-size:11px;padding:0 12px;}"
             "QPushButton:hover{border-color:#22c55e;color:#22c55e;}")
         auto_btn.clicked.connect(self._auto_pid)
 
@@ -424,8 +424,8 @@ class TECPanel(QWidget):
         self._log = QTextEdit()
         self._log.setReadOnly(True); self._log.setFixedHeight(80)
         self._log.setStyleSheet(
-            "QTextEdit{background:#16191f;border:1px solid #3a4055;border-radius:5px;"
-            "color:#64748b;font-size:11px;font-family:Consolas,monospace;}")
+            "QTextEdit{background:#0a0c10;border:1px solid #1e2433;border-radius:5px;"
+            "color:#4a5568;font-size:11px;font-family:Consolas,monospace;}")
         layout.addWidget(self._log)
 
     # ── Scan ──────────────────────────────────
@@ -467,7 +467,7 @@ class TECPanel(QWidget):
         self.status_lbl.setText("●  Connected")
         self.status_lbl.setStyleSheet("color:#22c55e;font-size:12px;font-weight:600;")
         self.idn_lbl.setText(f"IDN: {idn[:50]}")
-        self.idn_lbl.setStyleSheet("color:#94a3b8;font-size:11px;")
+        self.idn_lbl.setStyleSheet("color:#8892a4;font-size:11px;")
         self.conn_btn.setText("✗  Disconnect")
         self.conn_btn.setEnabled(True)
         self.conn_btn.clicked.disconnect()
@@ -488,12 +488,12 @@ class TECPanel(QWidget):
             except: pass
             self._drv = None
         self.status_lbl.setText("○  Disconnected")
-        self.status_lbl.setStyleSheet("color:#64748b;font-size:12px;")
+        self.status_lbl.setStyleSheet("color:#4a5568;font-size:12px;")
         self.idn_lbl.setText("IDN: —")
         self.conn_btn.setText("⟳  Connect")
         self.conn_btn.clicked.disconnect()
         self.conn_btn.clicked.connect(self._connect)
-        self._log_msg("Disconnected","#64748b")
+        self._log_msg("Disconnected","#4a5568")
 
     # ── Output ────────────────────────────────
     def _set_out_style(self, on):
@@ -507,7 +507,7 @@ class TECPanel(QWidget):
             self._out_btn.setText("TEC OFF")
             self._out_btn.setStyleSheet(
                 "QPushButton{background:#1a0000;border:1px solid #3d0a0a;"
-                "border-radius:6px;color:#64748b;font-size:12px;font-weight:700;}"
+                "border-radius:6px;color:#4a5568;font-size:12px;font-weight:700;}"
                 "QPushButton:hover{background:#3d0a0a;color:#ef4444;}")
 
     def _toggle_output(self):
@@ -554,7 +554,7 @@ class TECPanel(QWidget):
         self._set_out_style(out_on)
         self._outp_card._val.setText("ON" if out_on else "OFF")
         self._outp_card._val.setStyleSheet(
-            f"color:{'#22c55e' if out_on else '#64748b'};background:transparent;")
+            f"color:{'#22c55e' if out_on else '#4a5568'};background:transparent;")
 
     # ── PID ───────────────────────────────────
     def _apply_pid(self):

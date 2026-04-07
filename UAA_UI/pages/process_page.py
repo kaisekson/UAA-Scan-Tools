@@ -27,11 +27,11 @@ FAILED  = "failed"
 SKIPPED = "skipped"
 
 STATE_COLOR = {
-    WAIT:    "#64748b",
+    WAIT:    "#4a5568",
     RUNNING: "#4a9eff",
     DONE:    "#22c55e",
     FAILED:  "#ef4444",
-    SKIPPED: "#64748b",
+    SKIPPED: "#2a3444",
 }
 STATE_ICON = {
     WAIT:    "○",
@@ -50,20 +50,20 @@ def _btn(text, color="#4a9eff", h=30, w=None, enabled=True):
     b = QPushButton(text)
     if h: b.setFixedHeight(h)
     if w: b.setFixedWidth(w)
-    bg = {"#4a9eff":"#1e2d47","#22c55e":"#1a3a1a",
+    bg = {"#4a9eff":"#0d1520","#22c55e":"#1a3a1a",
           "#ef4444":"#1a0000","#eab308":"#1a1000",
-          "#94a3b8":"#2a2f3d","#a855f7":"#1a0d2e"}.get(color,"#2a2f3d")
+          "#8892a4":"#161b22","#a855f7":"#1a0d2e"}.get(color,"#161b22")
     b.setStyleSheet(
         f"QPushButton{{background:{bg};border:1px solid {color};"
         f"border-radius:4px;color:{color};font-size:11px;font-weight:600;padding:0 10px;}}"
         f"QPushButton:hover{{background:{color};color:#000;}}"
-        f"QPushButton:disabled{{border-color:#3a4055;color:#64748b;background:#16191f;}}")
+        f"QPushButton:disabled{{border-color:#1e2433;color:#2a3444;background:#0a0c10;}}")
     b.setEnabled(enabled)
     return b
 
 def _hline():
     f = QFrame(); f.setFrameShape(QFrame.Shape.HLine)
-    f.setStyleSheet("background:#3a4055;max-height:1px;"); return f
+    f.setStyleSheet("background:#1e2433;max-height:1px;"); return f
 
 
 # ══════════════════════════════════════════════
@@ -190,15 +190,15 @@ class StepNavItem(QPushButton):
         enabled = self._step.get("enabled",True)
         opacity = "opacity:0.4;" if not enabled else ""
 
-        checked_bg = "#1e2d47" if s==WAIT else \
+        checked_bg = "#0d1520" if s==WAIT else \
                      "#0d1a2e" if s==RUNNING else \
                      "#0d1a0d" if s==DONE else \
-                     "#1a0000" if s==FAILED else "#2a2f3d"
+                     "#1a0000" if s==FAILED else "#161b22"
 
         self.setStyleSheet(f"""
             QPushButton{{
-                background:#20242e;
-                border:none;border-bottom:1px solid #3a4055;
+                background:#0d0f14;
+                border:none;border-bottom:1px solid #1e2433;
                 border-left:3px solid transparent;
                 text-align:left;padding:6px 10px;
                 {opacity}
@@ -207,7 +207,7 @@ class StepNavItem(QPushButton):
                 background:{checked_bg};
                 border-left:3px solid {color};
             }}
-            QPushButton:hover{{background:#2a2f3d;}}
+            QPushButton:hover{{background:#161b22;}}
         """)
 
         # Build text layout manually via label overlay — use setText with rich
@@ -222,11 +222,11 @@ class StepNavItem(QPushButton):
         top = QHBoxLayout(); top.setSpacing(6)
         num = QLabel(f"{self._idx+1:02d}")
         num.setFont(QFont("Consolas",9)); num.setFixedWidth(18)
-        num.setStyleSheet(f"color:#64748b;background:transparent;")
+        num.setStyleSheet(f"color:#2a3444;background:transparent;")
         ic  = QLabel(step_icon); ic.setFixedWidth(18)
         ic.setStyleSheet("background:transparent;font-size:13px;")
         nm  = QLabel(name); nm.setFont(QFont("Segoe UI",11,600))
-        nm.setStyleSheet(f"color:{'#e2e8f0' if enabled else '#64748b'};background:transparent;")
+        nm.setStyleSheet(f"color:{'#c5cdd9' if enabled else '#4a5568'};background:transparent;")
         st  = QLabel(f"{icon} {s.capitalize()}")
         st.setStyleSheet(f"color:{color};font-size:9px;font-weight:700;background:transparent;")
         top.addWidget(num); top.addWidget(ic); top.addWidget(nm,1); top.addWidget(st)
@@ -237,7 +237,7 @@ class StepNavItem(QPushButton):
         parts  = [f"{k}:{v}" for k,v in list(params.items())[:2]]
         if parts:
             psum = QLabel("  ·  ".join(parts))
-            psum.setStyleSheet("color:#64748b;font-size:9px;background:transparent;padding-left:36px;")
+            psum.setStyleSheet("color:#2a3444;font-size:9px;background:transparent;padding-left:36px;")
             v.addWidget(psum)
 
 
@@ -270,19 +270,19 @@ class ProcessPage(QWidget):
         left = QFrame()
         left.setFixedWidth(240)
         left.setStyleSheet(
-            "QFrame{background:#20242e;border:1px solid #3a4055;border-radius:6px;}")
+            "QFrame{background:#0d0f14;border:1px solid #1e2433;border-radius:6px;}")
         v = QVBoxLayout(left); v.setContentsMargins(0,0,0,0); v.setSpacing(0)
 
         # Header
         hdr = QFrame()
         hdr.setStyleSheet(
-            "QFrame{background:#16191f;border:none;"
-            "border-bottom:1px solid #3a4055;border-radius:6px 6px 0 0;}")
+            "QFrame{background:#0a0c10;border:none;"
+            "border-bottom:1px solid #1e2433;border-radius:6px 6px 0 0;}")
         hh = QHBoxLayout(hdr); hh.setContentsMargins(12,8,12,8)
         self._recipe_lbl = QLabel("No recipe loaded")
         self._recipe_lbl.setFont(QFont("Segoe UI",11,600))
-        self._recipe_lbl.setStyleSheet("color:#e2e8f0;background:transparent;")
-        self._step_count_lbl = lbl("0 steps","#64748b",9)
+        self._recipe_lbl.setStyleSheet("color:#c5cdd9;background:transparent;")
+        self._step_count_lbl = lbl("0 steps","#4a5568",9)
         hh.addWidget(self._recipe_lbl,1); hh.addWidget(self._step_count_lbl)
         v.addWidget(hdr)
 
@@ -290,8 +290,8 @@ class ProcessPage(QWidget):
         scroll = QScrollArea(); scroll.setWidgetResizable(True)
         scroll.setStyleSheet(
             "QScrollArea{background:transparent;border:none;}"
-            "QScrollBar:vertical{width:4px;background:#16191f;}"
-            "QScrollBar::handle:vertical{background:#3a4055;border-radius:2px;}")
+            "QScrollBar:vertical{width:4px;background:#0a0c10;}"
+            "QScrollBar::handle:vertical{background:#1e2433;border-radius:2px;}")
         self._nav_inner = QWidget()
         self._nav_inner.setStyleSheet("background:transparent;")
         self._nav_layout = QVBoxLayout(self._nav_inner)
@@ -303,17 +303,17 @@ class ProcessPage(QWidget):
         # Progress summary
         prog_frame = QFrame()
         prog_frame.setStyleSheet(
-            "QFrame{background:#16191f;border:none;border-top:1px solid #3a4055;"
+            "QFrame{background:#0a0c10;border:none;border-top:1px solid #1e2433;"
             "border-radius:0 0 6px 6px;}")
         ph = QVBoxLayout(prog_frame); ph.setContentsMargins(10,8,10,8); ph.setSpacing(4)
         self._prog_bar = QProgressBar()
         self._prog_bar.setFixedHeight(6)
         self._prog_bar.setTextVisible(False)
         self._prog_bar.setStyleSheet(
-            "QProgressBar{background:#3a4055;border-radius:3px;border:none;}"
+            "QProgressBar{background:#1e2433;border-radius:3px;border:none;}"
             "QProgressBar::chunk{background:#4a9eff;border-radius:3px;}")
         self._prog_bar.setValue(0)
-        self._prog_summary = lbl("0 / 0 steps","#64748b",10)
+        self._prog_summary = lbl("0 / 0 steps","#4a5568",10)
         ph.addWidget(self._prog_bar)
         ph.addWidget(self._prog_summary)
         v.addWidget(prog_frame)
@@ -327,27 +327,27 @@ class ProcessPage(QWidget):
     def _build_right(self, layout):
         right = QFrame()
         right.setStyleSheet(
-            "QFrame{background:#20242e;border:1px solid #3a4055;border-radius:6px;}")
+            "QFrame{background:#0d0f14;border:1px solid #1e2433;border-radius:6px;}")
         v = QVBoxLayout(right); v.setContentsMargins(0,0,0,0); v.setSpacing(0)
 
         # Header controls
         ctrl = QFrame()
         ctrl.setStyleSheet(
-            "QFrame{background:#16191f;border:none;"
-            "border-bottom:1px solid #3a4055;border-radius:6px 6px 0 0;}")
+            "QFrame{background:#0a0c10;border:none;"
+            "border-bottom:1px solid #1e2433;border-radius:6px 6px 0 0;}")
         ch = QHBoxLayout(ctrl); ch.setContentsMargins(12,8,12,8); ch.setSpacing(8)
 
         self._cur_step_lbl = QLabel("— Load a recipe to start —")
         self._cur_step_lbl.setFont(QFont("Segoe UI",12,600))
-        self._cur_step_lbl.setStyleSheet("color:#e2e8f0;background:transparent;")
+        self._cur_step_lbl.setStyleSheet("color:#c5cdd9;background:transparent;")
         ch.addWidget(self._cur_step_lbl,1)
 
         # Control buttons
         self._run_btn   = _btn("▶ Run","#22c55e",h=30)
         self._pause_btn = _btn("⏸","#eab308",h=30,w=34,enabled=False)
         self._stop_btn  = _btn("⏹","#ef4444",h=30,w=34,enabled=False)
-        self._skip_btn  = _btn("⏭ Skip","#64748b",h=30,enabled=False)
-        self._back_btn  = _btn("◀ Back","#64748b",h=30,enabled=False)
+        self._skip_btn  = _btn("⏭ Skip","#4a5568",h=30,enabled=False)
+        self._back_btn  = _btn("◀ Back","#4a5568",h=30,enabled=False)
         self._next_btn  = _btn("Next ▶","#4a9eff",h=30,enabled=False)
         self._run_all_btn = _btn("▶▶ Run All","#a855f7",h=30,enabled=False)
 
@@ -371,11 +371,11 @@ class ProcessPage(QWidget):
         # Step detail
         detail_frame = QFrame()
         detail_frame.setStyleSheet(
-            "QFrame{background:#16191f;border:1px solid #3a4055;border-radius:6px;}")
+            "QFrame{background:#0a0c10;border:1px solid #1e2433;border-radius:6px;}")
         df = QVBoxLayout(detail_frame); df.setContentsMargins(12,10,12,10); df.setSpacing(8)
         self._detail_title = QLabel("Step Detail")
         self._detail_title.setFont(QFont("Segoe UI",12,600))
-        self._detail_title.setStyleSheet("color:#e2e8f0;background:transparent;")
+        self._detail_title.setStyleSheet("color:#c5cdd9;background:transparent;")
         df.addWidget(self._detail_title)
         df.addWidget(_hline())
 
@@ -389,19 +389,19 @@ class ProcessPage(QWidget):
         # Step result
         self._result_frame = QFrame()
         self._result_frame.setStyleSheet(
-            "QFrame{background:#20242e;border:1px solid #3a4055;border-radius:5px;}")
+            "QFrame{background:#0d0f14;border:1px solid #1e2433;border-radius:5px;}")
         rf = QVBoxLayout(self._result_frame); rf.setContentsMargins(10,8,10,8); rf.setSpacing(4)
-        rf.addWidget(lbl("RESULT","#64748b",9,True))
+        rf.addWidget(lbl("RESULT","#4a5568",9,True))
         self._result_lbl = QLabel("—")
         self._result_lbl.setFont(QFont("Consolas",12,700))
-        self._result_lbl.setStyleSheet("color:#64748b;background:transparent;")
+        self._result_lbl.setStyleSheet("color:#4a5568;background:transparent;")
         rf.addWidget(self._result_lbl)
 
         # Step progress bar
         self._step_prog = QProgressBar()
         self._step_prog.setFixedHeight(6); self._step_prog.setTextVisible(False)
         self._step_prog.setStyleSheet(
-            "QProgressBar{background:#3a4055;border-radius:3px;border:none;}"
+            "QProgressBar{background:#1e2433;border-radius:3px;border:none;}"
             "QProgressBar::chunk{background:#22c55e;border-radius:3px;}")
         self._step_prog.setValue(0)
         rf.addWidget(self._step_prog)
@@ -414,13 +414,13 @@ class ProcessPage(QWidget):
         log_frame.setStyleSheet(
             "QFrame{background:transparent;border:none;}")
         lf = QVBoxLayout(log_frame); lf.setContentsMargins(0,0,0,0); lf.setSpacing(4)
-        lf.addWidget(lbl("RUN LOG","#64748b",9,True))
+        lf.addWidget(lbl("RUN LOG","#4a5568",9,True))
         self._log = QTextEdit()
         self._log.setReadOnly(True)
         self._log.setStyleSheet(
-            "QTextEdit{background:#16191f;border:1px solid #3a4055;border-radius:5px;"
-            "color:#64748b;font-size:10px;font-family:Consolas,monospace;}")
-        clr_btn = _btn("Clear","#64748b",h=22)
+            "QTextEdit{background:#0a0c10;border:1px solid #1e2433;border-radius:5px;"
+            "color:#4a5568;font-size:10px;font-family:Consolas,monospace;}")
+        clr_btn = _btn("Clear","#4a5568",h=22)
         clr_btn.clicked.connect(self._log.clear)
         lf.addWidget(self._log,1); lf.addWidget(clr_btn)
         body.addWidget(log_frame,1)
@@ -485,7 +485,7 @@ class ProcessPage(QWidget):
             f"<span style='color:{color};font-size:10px;'>"
             f"{STATE_ICON[state]} {state.capitalize()}</span>")
         self._detail_title.setText(stype)
-        self._detail_title.setStyleSheet(f"color:#e2e8f0;background:transparent;")
+        self._detail_title.setStyleSheet(f"color:#c5cdd9;background:transparent;")
 
         # Clear params
         while self._param_layout.count():
@@ -496,9 +496,9 @@ class ProcessPage(QWidget):
         for i,(key,val) in enumerate(params.items()):
             f = QFrame(); f.setStyleSheet("QFrame{background:transparent;border:none;}")
             fv = QVBoxLayout(f); fv.setContentsMargins(0,0,0,0); fv.setSpacing(2)
-            fv.addWidget(lbl(key.upper().replace("_"," "),"#64748b",9,True))
+            fv.addWidget(lbl(key.upper().replace("_"," "),"#4a5568",9,True))
             vl = QLabel(str(val)); vl.setFont(QFont("Consolas",11,700))
-            vl.setStyleSheet("color:#e2e8f0;background:transparent;")
+            vl.setStyleSheet("color:#c5cdd9;background:transparent;")
             fv.addWidget(vl)
             self._param_layout.addWidget(f, i//COLS, i%COLS)
 
@@ -511,13 +511,13 @@ class ProcessPage(QWidget):
             self._result_lbl.setStyleSheet("color:#ef4444;font-size:13px;font-weight:700;background:transparent;")
         elif state == SKIPPED:
             self._result_lbl.setText("SKIPPED")
-            self._result_lbl.setStyleSheet("color:#64748b;font-size:13px;font-weight:700;background:transparent;")
+            self._result_lbl.setStyleSheet("color:#2a3444;font-size:13px;font-weight:700;background:transparent;")
         elif state == RUNNING:
             self._result_lbl.setText("Running...")
             self._result_lbl.setStyleSheet("color:#4a9eff;font-size:13px;font-weight:700;background:transparent;")
         else:
             self._result_lbl.setText("—")
-            self._result_lbl.setStyleSheet("color:#64748b;font-size:13px;background:transparent;")
+            self._result_lbl.setStyleSheet("color:#4a5568;font-size:13px;background:transparent;")
 
         self._step_prog.setValue(0)
 
@@ -563,7 +563,7 @@ class ProcessPage(QWidget):
         if idx < 0 or idx >= len(self._steps): return
         step = self._steps[idx]
         if not step.get("enabled", True):
-            self._log_msg(f"Step {idx+1} disabled — skipping","#64748b")
+            self._log_msg(f"Step {idx+1} disabled — skipping","#4a5568")
             self._skip(); return
 
         self._running = True
@@ -580,8 +580,8 @@ class ProcessPage(QWidget):
         self._runner.start()
 
     def _on_step_log(self, msg, level):
-        colors = {"info":"#94a3b8","ok":"#22c55e","warn":"#eab308","error":"#ef4444"}
-        self._log_msg(msg, colors.get(level,"#94a3b8"))
+        colors = {"info":"#8892a4","ok":"#22c55e","warn":"#eab308","error":"#ef4444"}
+        self._log_msg(msg, colors.get(level,"#8892a4"))
 
     def _on_step_done(self, success):
         idx = self._current
@@ -626,7 +626,7 @@ class ProcessPage(QWidget):
         self._states[idx] = SKIPPED
         self._update_nav_states()
         self._update_progress()
-        self._log_msg(f"⊘ Step {idx+1} skipped","#64748b")
+        self._log_msg(f"⊘ Step {idx+1} skipped","#2a3444")
         self._next()
 
     def _back(self):
@@ -663,8 +663,8 @@ class ProcessPage(QWidget):
     # Log
     # ══════════════════════════════════════════
 
-    def _log_msg(self, msg, color="#94a3b8"):
+    def _log_msg(self, msg, color="#8892a4"):
         ts = datetime.datetime.now().strftime("%H:%M:%S")
         self._log.append(
-            f'<span style="color:#64748b;">[{ts}]</span> '
+            f'<span style="color:#2a3444;">[{ts}]</span> '
             f'<span style="color:{color};">{msg}</span>')

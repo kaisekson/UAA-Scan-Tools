@@ -2,7 +2,7 @@ from PyQt6.QtWidgets import QLabel, QFrame, QPushButton, QWidget, QVBoxLayout
 from PyQt6.QtCore import Qt
 
 
-def lbl(text, color="#e2e8f0", size=13, bold=False):
+def lbl(text, color="#c5cdd9", size=13, bold=False):
     w = QLabel(text)
     w.setStyleSheet(
         f"color:{color}; font-size:{size}px;"
@@ -14,7 +14,7 @@ def lbl(text, color="#e2e8f0", size=13, bold=False):
 def divider():
     line = QFrame()
     line.setFrameShape(QFrame.Shape.HLine)
-    line.setStyleSheet("background:#3a4055; border:none; max-height:1px;")
+    line.setStyleSheet("background:#1e2433; border:none; max-height:1px;")
     line.setFixedHeight(1)
     return line
 
@@ -32,12 +32,12 @@ class SidebarIcon(QPushButton):
                 background: transparent;
                 border: none;
                 border-radius: 8px;
-                color: #64748b;
+                color: #4a5568;
                 font-size: 18px;
             }}
-            QPushButton:hover  {{ background: #3a4055; color: #94a3b8; }}
+            QPushButton:hover  {{ background: #1e2433; color: #8892a4; }}
             QPushButton:checked {{
-                background: #1e2d47;
+                background: #0d1520;
                 color: {color};
                 border: 1px solid #1a2744;
             }}
@@ -51,8 +51,8 @@ class MenuCard(QPushButton):
         self.setEnabled(enabled)
         self.setStyleSheet(f"""
             QPushButton {{
-                background: #20242e;
-                border: 1px solid #3a4055;
+                background: #0d0f14;
+                border: 1px solid #1e2433;
                 border-radius: 6px;
                 text-align: left;
                 padding: 0 14px;
@@ -79,9 +79,9 @@ class MenuCard(QPushButton):
         tv.setContentsMargins(0, 0, 0, 0)
         tv.setSpacing(2)
         t1 = QLabel(title)
-        t1.setStyleSheet("color:#e2e8f0; font-size:13px; font-weight:600; background:transparent;")
+        t1.setStyleSheet("color:#c5cdd9; font-size:13px; font-weight:600; background:transparent;")
         t2 = QLabel(subtitle)
-        t2.setStyleSheet("color:#64748b; font-size:10px; background:transparent;")
+        t2.setStyleSheet("color:#4a5568; font-size:10px; background:transparent;")
         tv.addWidget(t1); tv.addWidget(t2)
 
         h.addWidget(ico)

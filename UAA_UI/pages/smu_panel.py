@@ -228,7 +228,7 @@ class SweepWorker(QThread):
 # ══════════════════════════════════════════════
 
 class CollapsibleSection(QFrame):
-    def __init__(self, title, color="#64748b"):
+    def __init__(self, title, color="#4a5568"):
         super().__init__()
         self.setStyleSheet("QFrame{background:transparent;border:none;}")
         self._layout = QVBoxLayout(self)
@@ -241,13 +241,13 @@ class CollapsibleSection(QFrame):
         self._btn.setFixedHeight(30)
         self._btn.setStyleSheet(f"""
             QPushButton{{
-                background:#20242e;border:1px solid #3a4055;
+                background:#0d0f14;border:1px solid #1e2433;
                 border-radius:5px;color:{color};
                 font-size:11px;font-weight:600;
                 text-align:left;padding-left:12px;
             }}
             QPushButton:checked{{
-                background:#1a1d24;border-color:{color};
+                background:#111318;border-color:{color};
                 border-radius:5px 5px 0 0;
             }}
             QPushButton:hover{{border-color:{color};}}
@@ -258,7 +258,7 @@ class CollapsibleSection(QFrame):
         # Content frame
         self._content = QFrame()
         self._content.setStyleSheet(
-            f"QFrame{{background:#20242e;border:1px solid #3a4055;"
+            f"QFrame{{background:#0d0f14;border:1px solid #1e2433;"
             f"border-top:none;border-radius:0 0 5px 5px;}}")
         self._content.setVisible(False)
         self._content_layout = QVBoxLayout(self._content)
@@ -290,10 +290,10 @@ class ChannelPanel(QFrame):
         self._auto = False
         self._stats = {"min": None, "max": None, "sum": 0.0, "n": 0}
         self.setStyleSheet(
-            "QFrame{background:#20242e;"
-            "border-left:1px solid #3a4055;"
-            "border-right:1px solid #3a4055;"
-            "border-bottom:1px solid #3a4055;"
+            "QFrame{background:#0d0f14;"
+            "border-left:1px solid #1e2433;"
+            "border-right:1px solid #1e2433;"
+            "border-bottom:1px solid #1e2433;"
             "border-top:none;"
             "border-radius:0 0 6px 6px;}")
 
@@ -307,9 +307,9 @@ class ChannelPanel(QFrame):
         # Source
         src = QFrame()
         src.setStyleSheet(
-            "QFrame{background:#16191f;border:1px solid #3a4055;border-radius:6px;}")
+            "QFrame{background:#0a0c10;border:1px solid #1e2433;border-radius:6px;}")
         sv  = QVBoxLayout(src); sv.setContentsMargins(12,10,12,10); sv.setSpacing(8)
-        sv.addWidget(lbl("SOURCE","#64748b",10,True))
+        sv.addWidget(lbl("SOURCE","#4a5568",10,True))
         sv.addWidget(self._hline())
 
         self._level_unit_lbl = None
@@ -323,26 +323,26 @@ class ChannelPanel(QFrame):
             ("nplc_edit",  "NPLC",       "1.0",   "",  None),
         ]:
             row = QHBoxLayout(); row.setSpacing(6)
-            lw = lbl(label_txt,"#64748b",10); lw.setFixedWidth(88)
+            lw = lbl(label_txt,"#4a5568",10); lw.setFixedWidth(88)
             row.addWidget(lw)
             if options:
                 w = QComboBox(); w.addItems(options)
                 w.setFixedHeight(26); w.setFixedWidth(110)
                 w.setStyleSheet(
-                    "QComboBox{background:#2a2f3d;border:1px solid #3a4055;"
-                    "border-radius:4px;color:#e2e8f0;padding:2px 6px;font-size:11px;}"
+                    "QComboBox{background:#161b22;border:1px solid #1e2433;"
+                    "border-radius:4px;color:#c5cdd9;padding:2px 6px;font-size:11px;}"
                     "QComboBox::drop-down{border:none;}"
-                    "QComboBox QAbstractItemView{background:#20242e;border:1px solid #3a4055;color:#e2e8f0;}")
+                    "QComboBox QAbstractItemView{background:#0d0f14;border:1px solid #1e2433;color:#c5cdd9;}")
             else:
                 w = QLineEdit(default)
                 w.setFixedWidth(90)
                 w.setStyleSheet(
-                    "background:#2a2f3d;border:1px solid #3a4055;border-radius:4px;"
-                    "color:#e2e8f0;padding:4px 6px;font-size:11px;font-family:monospace;")
+                    "background:#161b22;border:1px solid #1e2433;border-radius:4px;"
+                    "color:#c5cdd9;padding:4px 6px;font-size:11px;font-family:monospace;")
             setattr(self, attr, w)
             row.addWidget(w)
             if unit:
-                ul = lbl(unit,"#64748b",9); ul.setFixedWidth(20)
+                ul = lbl(unit,"#2a3444",9); ul.setFixedWidth(20)
                 row.addWidget(ul)
                 if attr == "level_edit": self._level_unit_lbl = ul
                 if attr == "comp_edit":  self._comp_unit_lbl  = ul
@@ -358,18 +358,18 @@ class ChannelPanel(QFrame):
         # Readback
         rb = QFrame()
         rb.setStyleSheet(
-            "QFrame{background:#16191f;border:1px solid #3a4055;border-radius:6px;}")
+            "QFrame{background:#0a0c10;border:1px solid #1e2433;border-radius:6px;}")
         rv = QVBoxLayout(rb); rv.setContentsMargins(12,10,12,10); rv.setSpacing(6)
-        rv.addWidget(lbl("READBACK","#64748b",10,True))
+        rv.addWidget(lbl("READBACK","#4a5568",10,True))
         rv.addWidget(self._hline())
 
         # V card
         self._v_card = self._rb_card()
-        self._v_lbl  = lbl("VOLTAGE","#64748b",9,True)
+        self._v_lbl  = lbl("VOLTAGE","#4a5568",9,True)
         self._v_val  = QLabel("—")
         self._v_val.setFont(QFont("Consolas",18,700))
         self._v_val.setStyleSheet("color:#4a9eff;background:transparent;")
-        self._v_unit = lbl("V","#64748b",10)
+        self._v_unit = lbl("V","#4a5568",10)
         vr = QHBoxLayout(); vr.addWidget(self._v_val); vr.addWidget(self._v_unit); vr.addStretch()
         self._v_card.layout().addWidget(self._v_lbl)
         self._v_card.layout().addLayout(vr)
@@ -377,7 +377,7 @@ class ChannelPanel(QFrame):
 
         # I card
         self._i_card = self._rb_card()
-        self._i_lbl  = lbl("CURRENT","#64748b",9,True)
+        self._i_lbl  = lbl("CURRENT","#4a5568",9,True)
         self._i_val  = QLabel("—")
         self._i_val.setFont(QFont("Consolas",18,700))
         self._i_val.setStyleSheet("color:#22c55e;background:transparent;")
@@ -389,7 +389,7 @@ class ChannelPanel(QFrame):
 
         # Compliance card
         self._comp_card = self._rb_card()
-        self._comp_lbl  = lbl("COMPLIANCE","#64748b",9,True)
+        self._comp_lbl  = lbl("COMPLIANCE","#4a5568",9,True)
         self._comp_val  = lbl("OK","#22c55e",13,True)
         self._comp_val.setFont(QFont("Consolas",13,700))
         self._comp_card.layout().addWidget(self._comp_lbl)
@@ -404,11 +404,11 @@ class ChannelPanel(QFrame):
         for name in ["MIN","MAX","AVG"]:
             f = QFrame()
             f.setStyleSheet(
-                "QFrame{background:#16191f;border:1px solid #3a4055;border-radius:5px;}")
+                "QFrame{background:#0a0c10;border:1px solid #1e2433;border-radius:5px;}")
             fv = QVBoxLayout(f); fv.setContentsMargins(8,5,8,5); fv.setSpacing(2)
-            fv.addWidget(lbl(name,"#64748b",9,True))
+            fv.addWidget(lbl(name,"#4a5568",9,True))
             vl = QLabel("—"); vl.setFont(QFont("Consolas",12,700))
-            vl.setStyleSheet("color:#94a3b8;background:transparent;")
+            vl.setStyleSheet("color:#8892a4;background:transparent;")
             fv.addWidget(vl); self._stat_cards[name] = vl
             stat_row.addWidget(f)
         layout.addLayout(stat_row)
@@ -418,7 +418,7 @@ class ChannelPanel(QFrame):
         # Output controls — อยู่ใน border
         out_frame = QFrame()
         out_frame.setStyleSheet(
-            "QFrame{background:#16191f;border:none;"
+            "QFrame{background:#0a0c10;border:none;"
             "border-radius:0 0 6px 6px;padding:2px;}")
         of = QHBoxLayout(out_frame); of.setContentsMargins(8,6,8,6); of.setSpacing(8)
 
@@ -428,7 +428,7 @@ class ChannelPanel(QFrame):
         self.onoff_btn.clicked.connect(self._toggle_output)
         self._out_on = False
 
-        self.status_lbl = lbl("Output OFF","#64748b",11)
+        self.status_lbl = lbl("Output OFF","#4a5568",11)
         of.addWidget(self.onoff_btn)
         of.addWidget(self.status_lbl)
         of.addStretch()
@@ -441,8 +441,8 @@ class ChannelPanel(QFrame):
         ]:
             b = QPushButton(label); b.setFixedHeight(28)
             b.setStyleSheet(
-                "QPushButton{background:#2a2f3d;border:1px solid #3a4055;"
-                "border-radius:4px;color:#94a3b8;font-size:11px;padding:0 10px;}"
+                "QPushButton{background:#161b22;border:1px solid #1e2433;"
+                "border-radius:4px;color:#8892a4;font-size:11px;padding:0 10px;}"
                 "QPushButton:hover{border-color:#4a9eff;color:#4a9eff;}")
             b.clicked.connect(fn); of.addWidget(b)
         layout.addWidget(out_frame)
@@ -463,12 +463,12 @@ class ChannelPanel(QFrame):
 
     def _hline(self):
         f = QFrame(); f.setFrameShape(QFrame.Shape.HLine)
-        f.setStyleSheet("background:#3a4055;max-height:1px;"); return f
+        f.setStyleSheet("background:#1e2433;max-height:1px;"); return f
 
     def _rb_card(self):
         f = QFrame()
         f.setStyleSheet(
-            "QFrame{background:#16191f;border:1px solid #3a4055;border-radius:6px;}")
+            "QFrame{background:#0a0c10;border:1px solid #1e2433;border-radius:6px;}")
         QVBoxLayout(f).setContentsMargins(10,6,10,6)
         return f
 
@@ -483,7 +483,7 @@ class ChannelPanel(QFrame):
             self.onoff_btn.setText("OFF")
             self.onoff_btn.setStyleSheet(
                 "QPushButton{background:#1a0000;border:2px solid #3d0a0a;"
-                "border-radius:6px;color:#64748b;font-size:13px;font-weight:700;}"
+                "border-radius:6px;color:#4a5568;font-size:13px;font-weight:700;}"
                 "QPushButton:hover{background:#3d0a0a;color:#ef4444;}")
 
     def set_connected(self, ok):
@@ -515,7 +515,7 @@ class ChannelPanel(QFrame):
             self._set_onoff_style(self._out_on)
             self.status_lbl.setText("Output ON" if self._out_on else "Output OFF")
             self.status_lbl.setStyleSheet(
-                f"color:{'#22c55e' if self._out_on else '#64748b'};font-size:11px;")
+                f"color:{'#22c55e' if self._out_on else '#4a5568'};font-size:11px;")
         except Exception as e: print(f"[SMU] output: {e}")
 
     def _measure_once(self):
@@ -541,7 +541,7 @@ class ChannelPanel(QFrame):
             self._comp_val.setText("OK")
             self._comp_val.setStyleSheet("color:#22c55e;font-size:13px;font-weight:700;")
             self._comp_card.setStyleSheet(
-                "QFrame{background:#16191f;border:1px solid #3a4055;border-radius:6px;}")
+                "QFrame{background:#0a0c10;border:1px solid #1e2433;border-radius:6px;}")
 
         # Stats
         self._stats["n"]   += 1
@@ -579,7 +579,7 @@ class SMUPanel(QWidget):
 
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
-        scroll.setStyleSheet("background:#1a1d24;border:none;")
+        scroll.setStyleSheet("background:#111318;border:none;")
         inner  = QWidget()
         layout = QVBoxLayout(inner)
         layout.setContentsMargins(16,14,16,14)
@@ -601,9 +601,9 @@ class SMUPanel(QWidget):
 
     def _sh(self, layout, title, extra=None):
         row = QHBoxLayout(); row.setSpacing(8)
-        row.addWidget(lbl(title,"#64748b",10,True))
+        row.addWidget(lbl(title,"#4a5568",10,True))
         line = QFrame(); line.setFrameShape(QFrame.Shape.HLine)
-        line.setStyleSheet("background:#3a4055;max-height:1px;")
+        line.setStyleSheet("background:#1e2433;max-height:1px;")
         row.addWidget(line,1)
         if extra: row.addWidget(extra)
         layout.addLayout(row)
@@ -612,14 +612,14 @@ class SMUPanel(QWidget):
         ts = datetime.datetime.now().strftime("%H:%M:%S")
         self._log.append(
             f'<span style="color:{color};">[{ts}]</span> '
-            f'<span style="color:#94a3b8;">{msg}</span>')
+            f'<span style="color:#8892a4;">{msg}</span>')
 
     # ── Connection ────────────────────────────
     def _build_connection(self, layout):
         self._sh(layout,"CONNECTION")
         card = QFrame()
         card.setStyleSheet(
-            "QFrame{background:#20242e;border:1px solid #3a4055;border-radius:6px;}")
+            "QFrame{background:#0d0f14;border:1px solid #1e2433;border-radius:6px;}")
         v = QVBoxLayout(card); v.setContentsMargins(12,10,12,10); v.setSpacing(8)
         row = QHBoxLayout(); row.setSpacing(10)
         for attr, lbl_txt, default, w in [
@@ -628,13 +628,13 @@ class SMUPanel(QWidget):
         ]:
             f  = QFrame(); fv = QVBoxLayout(f)
             fv.setContentsMargins(0,0,0,0); fv.setSpacing(3)
-            fv.addWidget(lbl(lbl_txt,"#64748b",10))
+            fv.addWidget(lbl(lbl_txt,"#4a5568",10))
             e  = QLineEdit(default)
             e.setStyleSheet(
-                "border-left:2px solid #22c55e;background:#2a2f3d;"
-                "border-top:1px solid #3a4055;border-right:1px solid #3a4055;"
-                "border-bottom:1px solid #3a4055;border-radius:4px;"
-                "color:#e2e8f0;padding:5px 8px;font-size:12px;")
+                "border-left:2px solid #22c55e;background:#161b22;"
+                "border-top:1px solid #1e2433;border-right:1px solid #1e2433;"
+                "border-bottom:1px solid #1e2433;border-radius:4px;"
+                "color:#c5cdd9;padding:5px 8px;font-size:12px;")
             setattr(self,attr,e); fv.addWidget(e); row.addWidget(f,w)
         v.addLayout(row)
         cr = QHBoxLayout(); cr.setSpacing(10)
@@ -644,10 +644,10 @@ class SMUPanel(QWidget):
             "QPushButton{background:#0d2010;border:1px solid #22c55e;"
             "border-radius:5px;color:#22c55e;font-size:12px;font-weight:600;padding:0 14px;}"
             "QPushButton:hover{background:#22c55e;color:#000;}"
-            "QPushButton:disabled{border-color:#3a4055;color:#64748b;background:#16191f;}")
+            "QPushButton:disabled{border-color:#1e2433;color:#2a3444;background:#0a0c10;}")
         self.conn_btn.clicked.connect(self._connect)
-        self.status_lbl = lbl("○  Disconnected","#64748b",12)
-        self.idn_lbl    = lbl("IDN: —","#64748b",11)
+        self.status_lbl = lbl("○  Disconnected","#4a5568",12)
+        self.idn_lbl    = lbl("IDN: —","#2a3444",11)
         cr.addWidget(self.conn_btn); cr.addWidget(self.status_lbl)
         cr.addStretch(); cr.addWidget(self.idn_lbl)
         v.addLayout(cr)
@@ -662,21 +662,21 @@ class SMUPanel(QWidget):
             btn = QPushButton(name); btn.setCheckable(True); btn.setFixedHeight(30)
             btn.setStyleSheet("""
                 QPushButton{
-                    background:#20242e;
-                    border:1px solid #3a4055;
+                    background:#0d0f14;
+                    border:1px solid #1e2433;
                     border-bottom:none;
                     border-radius:5px 5px 0 0;
-                    color:#64748b;font-size:12px;font-weight:600;padding:0 20px;
+                    color:#4a5568;font-size:12px;font-weight:600;padding:0 20px;
                 }
                 QPushButton:checked{
-                    background:#20242e;
+                    background:#0d0f14;
                     border-top:2px solid #22c55e;
-                    border-left:1px solid #3a4055;
-                    border-right:1px solid #3a4055;
-                    border-bottom:2px solid #20242e;
+                    border-left:1px solid #1e2433;
+                    border-right:1px solid #1e2433;
+                    border-bottom:2px solid #0d0f14;
                     color:#22c55e;
                 }
-                QPushButton:hover{color:#94a3b8;}
+                QPushButton:hover{color:#8892a4;}
             """)
             btn.clicked.connect(lambda _, idx=i: self._switch_ch(idx))
             tabs_row.addWidget(btn); self._ch_tabs.append(btn)
@@ -718,21 +718,21 @@ class SMUPanel(QWidget):
             ("delay", "Delay (ms)","10"),
         ]:
             col = QVBoxLayout(); col.setSpacing(3)
-            col.addWidget(lbl(lbl_txt,"#64748b",10))
+            col.addWidget(lbl(lbl_txt,"#4a5568",10))
             e = QLineEdit(default)
             e.setStyleSheet(
-                "background:#2a2f3d;border:1px solid #3a4055;border-radius:4px;"
-                "color:#e2e8f0;padding:4px 6px;font-size:11px;font-family:monospace;")
+                "background:#161b22;border:1px solid #1e2433;border-radius:4px;"
+                "color:#c5cdd9;padding:4px 6px;font-size:11px;font-family:monospace;")
             self._sweep_fields[key] = e; col.addWidget(e); pv.addLayout(col)
 
         ch_col = QVBoxLayout(); ch_col.setSpacing(3)
-        ch_col.addWidget(lbl("Channel","#64748b",10))
+        ch_col.addWidget(lbl("Channel","#4a5568",10))
         self._sweep_ch = QComboBox(); self._sweep_ch.addItems(["a","b"])
         self._sweep_ch.setStyleSheet(
-            "QComboBox{background:#2a2f3d;border:1px solid #3a4055;border-radius:4px;"
-            "color:#e2e8f0;padding:3px 6px;font-size:11px;}"
+            "QComboBox{background:#161b22;border:1px solid #1e2433;border-radius:4px;"
+            "color:#c5cdd9;padding:3px 6px;font-size:11px;}"
             "QComboBox::drop-down{border:none;}"
-            "QComboBox QAbstractItemView{background:#20242e;color:#e2e8f0;}")
+            "QComboBox QAbstractItemView{background:#0d0f14;color:#c5cdd9;}")
         ch_col.addWidget(self._sweep_ch); pv.addLayout(ch_col)
         self._sweep_sec.add_widget(params)
 
@@ -748,18 +748,18 @@ class SMUPanel(QWidget):
         self._sweep_stop_btn = QPushButton("■ Stop")
         self._sweep_stop_btn.setFixedHeight(30)
         self._sweep_stop_btn.setStyleSheet(
-            "QPushButton{background:#2a2f3d;border:1px solid #3a4055;"
-            "border-radius:5px;color:#94a3b8;font-size:12px;padding:0 12px;}"
+            "QPushButton{background:#161b22;border:1px solid #1e2433;"
+            "border-radius:5px;color:#8892a4;font-size:12px;padding:0 12px;}"
             "QPushButton:hover{border-color:#ef4444;color:#ef4444;}")
         self._sweep_stop_btn.clicked.connect(self._stop_sweep)
         self._sweep_export_btn = QPushButton("Export CSV")
         self._sweep_export_btn.setFixedHeight(30)
         self._sweep_export_btn.setStyleSheet(
-            "QPushButton{background:#2a2f3d;border:1px solid #3a4055;"
-            "border-radius:5px;color:#94a3b8;font-size:12px;padding:0 12px;}"
+            "QPushButton{background:#161b22;border:1px solid #1e2433;"
+            "border-radius:5px;color:#8892a4;font-size:12px;padding:0 12px;}"
             "QPushButton:hover{border-color:#4a9eff;color:#4a9eff;}")
         self._sweep_export_btn.clicked.connect(self._export_sweep)
-        self._sweep_prog = lbl("0 / 0 points","#64748b",10)
+        self._sweep_prog = lbl("0 / 0 points","#4a5568",10)
         btn_row.addWidget(self._sweep_run_btn)
         btn_row.addWidget(self._sweep_stop_btn)
         btn_row.addWidget(self._sweep_export_btn)
@@ -771,7 +771,7 @@ class SMUPanel(QWidget):
         if HAS_PG:
             self._plot_widget = pg.PlotWidget()
             self._plot_widget.setFixedHeight(140)
-            self._plot_widget.setBackground("#16191f")
+            self._plot_widget.setBackground("#0a0c10")
             self._plot_widget.getAxis("left").setLabel("I (A)")
             self._plot_widget.getAxis("bottom").setLabel("V (V)")
             self._plot_curve = self._plot_widget.plot(pen=pg.mkPen("#22c55e",width=2))
@@ -780,10 +780,10 @@ class SMUPanel(QWidget):
             ph = QFrame()
             ph.setFixedHeight(100)
             ph.setStyleSheet(
-                "QFrame{background:#16191f;border:1px solid #3a4055;border-radius:6px;}")
+                "QFrame{background:#0a0c10;border:1px solid #1e2433;border-radius:6px;}")
             pl = QLabel("pyqtgraph not installed — pip install pyqtgraph")
             pl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            pl.setStyleSheet("color:#64748b;font-size:11px;background:transparent;")
+            pl.setStyleSheet("color:#2a3444;font-size:11px;background:transparent;")
             QVBoxLayout(ph).addWidget(pl)
             self._sweep_sec.add_widget(ph)
 
@@ -797,19 +797,19 @@ class SMUPanel(QWidget):
         file_row = QHBoxLayout(); file_row.setSpacing(6)
         self._script_lbl = QLabel("No file selected")
         self._script_lbl.setStyleSheet(
-            "background:#16191f;border:1px solid #3a4055;border-radius:4px;"
-            "color:#64748b;font-size:11px;padding:5px 10px;font-family:monospace;")
+            "background:#0a0c10;border:1px solid #1e2433;border-radius:4px;"
+            "color:#4a5568;font-size:11px;padding:5px 10px;font-family:monospace;")
         browse_btn = QPushButton("📂 Browse")
         browse_btn.setFixedHeight(28)
         browse_btn.setStyleSheet(
-            "QPushButton{background:#2a2f3d;border:1px solid #3a4055;"
-            "border-radius:4px;color:#94a3b8;font-size:11px;padding:0 10px;}"
+            "QPushButton{background:#161b22;border:1px solid #1e2433;"
+            "border-radius:4px;color:#8892a4;font-size:11px;padding:0 10px;}"
             "QPushButton:hover{border-color:#4a9eff;color:#4a9eff;}")
         browse_btn.clicked.connect(self._browse_script)
         load_btn = QPushButton("Load")
         load_btn.setFixedHeight(28)
         load_btn.setStyleSheet(
-            "QPushButton{background:#1e2d47;border:1px solid #4a9eff;"
+            "QPushButton{background:#0d1520;border:1px solid #4a9eff;"
             "border-radius:4px;color:#4a9eff;font-size:11px;padding:0 10px;}"
             "QPushButton:hover{background:#4a9eff;color:#000;}")
         load_btn.clicked.connect(self._load_script)
@@ -823,10 +823,10 @@ class SMUPanel(QWidget):
         stop_btn = QPushButton("■ Stop")
         stop_btn.setFixedHeight(28)
         stop_btn.setStyleSheet(
-            "QPushButton{background:#2a2f3d;border:1px solid #3a4055;"
-            "border-radius:4px;color:#94a3b8;font-size:11px;padding:0 10px;}"
+            "QPushButton{background:#161b22;border:1px solid #1e2433;"
+            "border-radius:4px;color:#8892a4;font-size:11px;padding:0 10px;}"
             "QPushButton:hover{border-color:#ef4444;color:#ef4444;}")
-        self._script_status = lbl("Ready","#64748b",10)
+        self._script_status = lbl("Ready","#4a5568",10)
         file_row.addWidget(self._script_lbl,1)
         file_row.addWidget(browse_btn)
         file_row.addWidget(load_btn)
@@ -844,12 +844,12 @@ class SMUPanel(QWidget):
         self._cmd_edit = QLineEdit()
         self._cmd_edit.setPlaceholderText("smua.measure.i()")
         self._cmd_edit.setStyleSheet(
-            "background:#16191f;border:1px solid #3a4055;border-radius:4px;"
-            "color:#e2e8f0;padding:6px 10px;font-size:12px;font-family:Consolas,monospace;")
+            "background:#0a0c10;border:1px solid #1e2433;border-radius:4px;"
+            "color:#c5cdd9;padding:6px 10px;font-size:12px;font-family:Consolas,monospace;")
         self._cmd_edit.returnPressed.connect(self._send_tsp)
         send_btn = QPushButton("Send"); send_btn.setFixedHeight(32)
         send_btn.setStyleSheet(
-            "QPushButton{background:#1e2d47;border:1px solid #4a9eff;"
+            "QPushButton{background:#0d1520;border:1px solid #4a9eff;"
             "border-radius:4px;color:#4a9eff;font-size:12px;font-weight:600;padding:0 14px;}"
             "QPushButton:hover{background:#4a9eff;color:#000;}")
         send_btn.clicked.connect(self._send_tsp)
@@ -859,8 +859,8 @@ class SMUPanel(QWidget):
         self._log = QTextEdit()
         self._log.setReadOnly(True); self._log.setFixedHeight(80)
         self._log.setStyleSheet(
-            "QTextEdit{background:#16191f;border:1px solid #3a4055;border-radius:5px;"
-            "color:#64748b;font-size:11px;font-family:Consolas,monospace;}")
+            "QTextEdit{background:#0a0c10;border:1px solid #1e2433;border-radius:5px;"
+            "color:#4a5568;font-size:11px;font-family:Consolas,monospace;}")
         self._console_sec.add_widget(self._log)
         layout.addWidget(self._console_sec)
 
@@ -889,7 +889,7 @@ class SMUPanel(QWidget):
         self.status_lbl.setText("●  Connected")
         self.status_lbl.setStyleSheet("color:#22c55e;font-size:12px;font-weight:600;")
         self.idn_lbl.setText(f"IDN: {idn}")
-        self.idn_lbl.setStyleSheet("color:#94a3b8;font-size:11px;")
+        self.idn_lbl.setStyleSheet("color:#8892a4;font-size:11px;")
         self.conn_btn.setText("✗  Disconnect"); self.conn_btn.setEnabled(True)
         self.conn_btn.clicked.disconnect()
         self.conn_btn.clicked.connect(self._disconnect)
@@ -908,12 +908,12 @@ class SMUPanel(QWidget):
             self._drv[0] = None
         for p in self._ch_panels: p.set_connected(False)
         self.status_lbl.setText("○  Disconnected")
-        self.status_lbl.setStyleSheet("color:#64748b;font-size:12px;")
+        self.status_lbl.setStyleSheet("color:#4a5568;font-size:12px;")
         self.idn_lbl.setText("IDN: —")
         self.conn_btn.setText("⟳  Connect")
         self.conn_btn.clicked.disconnect()
         self.conn_btn.clicked.connect(self._connect)
-        self._log_msg("Disconnected","#64748b")
+        self._log_msg("Disconnected","#4a5568")
 
     # ── Sweep ─────────────────────────────────
     def _run_sweep(self):
@@ -970,8 +970,8 @@ class SMUPanel(QWidget):
             self._script_path = path
             self._script_lbl.setText(os.path.basename(path))
             self._script_lbl.setStyleSheet(
-                "background:#16191f;border:1px solid #3a4055;border-radius:4px;"
-                "color:#e2e8f0;font-size:11px;padding:5px 10px;font-family:monospace;")
+                "background:#0a0c10;border:1px solid #1e2433;border-radius:4px;"
+                "color:#c5cdd9;font-size:11px;padding:5px 10px;font-family:monospace;")
 
     def _load_script(self):
         if not self._drv[0] or not self._script_path: return
