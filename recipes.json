@@ -4,7 +4,7 @@
     "product_id": "",
     "version": "1.0",
     "description": "",
-    "modified": "2026-04-07 23:10",
+    "modified": "2026-04-08 00:45",
     "steps": [
       {
         "type": "Move",
@@ -69,7 +69,7 @@
     "product_id": "",
     "version": "1.0",
     "description": "",
-    "modified": "2026-04-07 23:02",
+    "modified": "2026-04-08 00:39",
     "steps": [
       {
         "type": "Move",
@@ -80,6 +80,18 @@
           "y": "0.000",
           "z": "0.000",
           "velocity": "5.000"
+        }
+      },
+      {
+        "type": "Tilt Correction",
+        "enabled": true,
+        "params": {
+          "axis": "U and V",
+          "step_deg": "0.010",
+          "threshold": "0.005",
+          "max_iter": "5",
+          "retry": "Yes",
+          "timeout": "30"
         }
       }
     ]
