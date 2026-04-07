@@ -7,7 +7,7 @@
 # border     = #3a4055   border (ชัดขึ้น)
 # text_main  = #e2e8f0   primary text (สว่างขึ้น)
 # text_muted = #94a3b8   secondary text
-# text_dim   = #4a5568   dim/placeholder
+# text_dim   = #64748b   dim/placeholder
 # accent     = #4a9eff   blue accent
 
 STYLE = """
@@ -27,7 +27,7 @@ QLineEdit {
     font-size: 13px;
 }
 QLineEdit:focus  { border: 1px solid #4a9eff; }
-QLineEdit:disabled { color: #4a5568; background: #20242e; }
+QLineEdit:disabled { color: #64748b; background: #20242e; }
 QPushButton {
     background: #252a38;
     border: 1px solid #3a4055;
@@ -39,7 +39,7 @@ QPushButton {
 QPushButton:hover   { border-color: #4a9eff; color: #4a9eff; background: #1e2d47; }
 QPushButton:pressed { background: #161b2e; }
 QPushButton:checked { background: #1e2d47; border-color: #4a9eff; color: #4a9eff; }
-QPushButton:disabled { border-color: #2a3040; color: #3a4055; background: #1a1d24; }
+QPushButton:disabled { border-color: #3a4055; color: #3a4055; background: #1a1d24; }
 QComboBox {
     background: #2a2f3d;
     border: 1px solid #3a4055;
@@ -58,7 +58,7 @@ QComboBox QAbstractItemView {
 }
 QTabWidget::pane { border: 1px solid #3a4055; background: #1a1d24; }
 QTabBar::tab {
-    background: #20242e; color: #4a5568;
+    background: #20242e; color: #64748b;
     padding: 8px 20px;
     border: 1px solid #3a4055;
     font-size: 12px;
@@ -75,7 +75,7 @@ QScrollBar:vertical {
 QScrollBar::handle:vertical {
     background: #3a4055; border-radius: 3px; min-height: 20px;
 }
-QScrollBar::handle:vertical:hover { background: #4a5568; }
+QScrollBar::handle:vertical:hover { background: #64748b; }
 QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0; }
 QTextEdit {
     background: #20242e;
@@ -86,9 +86,9 @@ QTextEdit {
 }
 QStatusBar {
     background: #14171e;
-    color: #4a5568;
+    color: #64748b;
     font-size: 11px;
-    border-top: 1px solid #2a3040;
+    border-top: 1px solid #3a4055;
 }
 QDialog {
     background: #1a1d24;

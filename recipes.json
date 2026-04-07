@@ -1,10 +1,10 @@
 [
   {
-    "name": "New Recipe",
+    "name": "Sekson1",
     "product_id": "",
     "version": "1.0",
     "description": "",
-    "modified": "2026-04-07 06:52",
+    "modified": "2026-04-07 23:10",
     "steps": [
       {
         "type": "Move",
@@ -49,15 +49,27 @@
           "velocity": "2.000",
           "nplc": "1.0"
         }
+      },
+      {
+        "type": "Tilt Correction",
+        "enabled": true,
+        "params": {
+          "axis": "U only",
+          "step_deg": "0.010",
+          "threshold": "0.005",
+          "max_iter": "5",
+          "retry": "Yes",
+          "timeout": "30"
+        }
       }
     ]
   },
   {
-    "name": "PSEK1",
+    "name": "PSEK1_2",
     "product_id": "",
     "version": "1.0",
     "description": "",
-    "modified": "2026-04-07 05:18",
+    "modified": "2026-04-07 23:02",
     "steps": [
       {
         "type": "Move",

@@ -146,22 +146,25 @@ def _btn(text, color="#4a9eff", h=26, w=None):
     b = QPushButton(text)
     if h: b.setFixedHeight(h)
     if w: b.setFixedWidth(w)
-    bg = {"#4a9eff":"#0d1520","#22c55e":"#1a3a1a",
+    bg = {"#4a9eff":"#1e2d47","#22c55e":"#1a3a1a",
           "#ef4444":"#1a0000","#eab308":"#1a1000",
-          "#8892a4":"#161b22"}.get(color,"#161b22")
+          "#94a3b8":"#2a2f3d"}.get(color,"#2a2f3d")
     b.setStyleSheet(
         f"QPushButton{{background:{bg};border:1px solid {color};"
         f"border-radius:4px;color:{color};font-size:11px;font-weight:600;padding:0 10px;}}"
         f"QPushButton:hover{{background:{color};color:#000;}}"
-        f"QPushButton:disabled{{border-color:#1e2433;color:#2a3444;background:#0a0c10;}}")
+        f"QPushButton:disabled{{border-color:#3a4055;color:#64748b;background:#16191f;}}")
     return b
 
-def _small_btn(text, color="#4a5568", size=24):
-    b = QPushButton(text); b.setFixedSize(size, size)
+def _small_btn(text, color="#64748b", size=28):
+    b = QPushButton(text)
+    b.setFixedHeight(28)
+    b.setMinimumWidth(54)
     b.setStyleSheet(
-        f"QPushButton{{background:#161b22;border:1px solid #1e2433;"
-        f"border-radius:3px;color:{color};font-size:10px;}}"
-        f"QPushButton:hover{{border-color:{color};color:{color};}}")
+        f"QPushButton{{background:#252a38;border:1px solid #3a4055;"
+        f"border-radius:4px;color:{color};font-size:11px;font-weight:600;"
+        f"padding:0 8px;}}"
+        f"QPushButton:hover{{border-color:{color};color:{color};background:#2e3447;}}")
     return b
 
 def _field_input(val="", w=None):
@@ -169,18 +172,18 @@ def _field_input(val="", w=None):
     if w: e.setFixedWidth(w)
     e.setFixedHeight(24)
     e.setStyleSheet(
-        "background:#161b22;border:1px solid #1e2433;border-radius:3px;"
-        "color:#c5cdd9;padding:1px 6px;font-size:11px;font-family:monospace;")
+        "background:#2a2f3d;border:1px solid #3a4055;border-radius:3px;"
+        "color:#e2e8f0;padding:1px 6px;font-size:11px;font-family:monospace;")
     return e
 
 def _field_combo(items, val=""):
     c = QComboBox(); c.addItems(items)
     c.setFixedHeight(24)
     c.setStyleSheet(
-        "QComboBox{background:#161b22;border:1px solid #1e2433;border-radius:3px;"
-        "color:#c5cdd9;padding:0 5px;font-size:11px;}"
+        "QComboBox{background:#2a2f3d;border:1px solid #3a4055;border-radius:3px;"
+        "color:#e2e8f0;padding:0 5px;font-size:11px;}"
         "QComboBox::drop-down{border:none;}"
-        "QComboBox QAbstractItemView{background:#0d0f14;color:#c5cdd9;font-size:11px;}")
+        "QComboBox QAbstractItemView{background:#20242e;color:#e2e8f0;font-size:11px;}")
     if val in items: c.setCurrentText(val)
     return c
 
@@ -203,7 +206,7 @@ class ToggleSwitch(QFrame):
                 "QFrame{background:#22c55e;border-radius:10px;border:none;}")
         else:
             self.setStyleSheet(
-                "QFrame{background:#1e2433;border-radius:10px;border:none;}")
+                "QFrame{background:#3a4055;border-radius:10px;border:none;}")
 
     def mousePressEvent(self, e):
         self._on = not self._on; self._update(); self.toggled.emit(self._on)
@@ -231,7 +234,7 @@ class StepRow(QFrame):
         self._param_widgets = {}
 
         self.setStyleSheet(
-            "QFrame{background:#0a0c10;border:1px solid #1e2433;border-radius:5px;}")
+            "QFrame{background:#16191f;border:1px solid #3a4055;border-radius:5px;}")
         v = QVBoxLayout(self); v.setContentsMargins(0,0,0,0); v.setSpacing(0)
 
         # Main row
@@ -240,7 +243,7 @@ class StepRow(QFrame):
 
         num_lbl = QLabel(f"{idx+1:02d}")
         num_lbl.setFixedWidth(20); num_lbl.setFont(QFont("Consolas",10))
-        num_lbl.setStyleSheet("color:#2a3444;background:transparent;")
+        num_lbl.setStyleSheet("color:#64748b;background:transparent;")
 
         icon_lbl = QLabel(STEP_TYPES.get(step_data["type"],{}).get("icon","?"))
         icon_lbl.setFixedWidth(20)
@@ -249,23 +252,41 @@ class StepRow(QFrame):
         info = QVBoxLayout(); info.setSpacing(1)
         self._name_lbl = QLabel(step_data["type"])
         self._name_lbl.setFont(QFont("Segoe UI",11,600))
-        self._name_lbl.setStyleSheet("color:#c5cdd9;background:transparent;")
+        self._name_lbl.setStyleSheet("color:#e2e8f0;background:transparent;")
         self._param_lbl = QLabel(self._param_summary())
-        self._param_lbl.setStyleSheet("color:#4a5568;font-size:10px;background:transparent;")
+        self._param_lbl.setStyleSheet("color:#64748b;font-size:10px;background:transparent;")
         info.addWidget(self._name_lbl); info.addWidget(self._param_lbl)
 
         self._toggle = ToggleSwitch(step_data.get("enabled",True))
         self._toggle.toggled.connect(lambda s,i=idx: self.enabled_changed.emit(i,s))
 
-        # Action buttons
-        up_btn   = _small_btn("↑","#4a5568"); up_btn.clicked.connect(lambda: self.move_up.emit(self._idx))
-        dn_btn   = _small_btn("↓","#4a5568"); dn_btn.clicked.connect(lambda: self.move_down.emit(self._idx))
-        edit_btn = _small_btn("✎","#eab308")
+        # Action buttons — ใช้ text ชัดเจน ไม่ใช้ symbol เดี่ยว
+        up_btn = QPushButton("▲ Up"); up_btn.setFixedHeight(28); up_btn.setMinimumWidth(58)
+        up_btn.setStyleSheet(
+            "QPushButton{background:#252a38;border:1px solid #3a4055;border-radius:4px;"
+            "color:#64748b;font-size:11px;font-weight:600;padding:0 8px;}"
+            "QPushButton:hover{border-color:#94a3b8;color:#e2e8f0;background:#2e3447;}")
+        up_btn.clicked.connect(lambda: self.move_up.emit(self._idx))
+
+        dn_btn = QPushButton("▼ Dn"); dn_btn.setFixedHeight(28); dn_btn.setMinimumWidth(58)
+        dn_btn.setStyleSheet(
+            "QPushButton{background:#252a38;border:1px solid #3a4055;border-radius:4px;"
+            "color:#64748b;font-size:11px;font-weight:600;padding:0 8px;}"
+            "QPushButton:hover{border-color:#94a3b8;color:#e2e8f0;background:#2e3447;}")
+        dn_btn.clicked.connect(lambda: self.move_down.emit(self._idx))
+
+        edit_btn = QPushButton("✎ Edit"); edit_btn.setFixedHeight(28); edit_btn.setMinimumWidth(64)
+        edit_btn.setStyleSheet(
+            "QPushButton{background:#252a38;border:1px solid #3a4055;border-radius:4px;"
+            "color:#eab308;font-size:11px;font-weight:600;padding:0 8px;}"
+            "QPushButton:hover{border-color:#eab308;color:#eab308;background:#1a1000;}")
         edit_btn.clicked.connect(self._toggle_expand)
-        del_btn  = _small_btn("✕","#3d0a0a")
+
+        del_btn = QPushButton("✕ Del"); del_btn.setFixedHeight(28); del_btn.setMinimumWidth(58)
         del_btn.setStyleSheet(
-            "QPushButton{background:#161b22;border:1px solid #1e2433;border-radius:3px;color:#3d0a0a;font-size:10px;}"
-            "QPushButton:hover{border-color:#ef4444;color:#ef4444;}")
+            "QPushButton{background:#252a38;border:1px solid #3a4055;border-radius:4px;"
+            "color:#64748b;font-size:11px;font-weight:600;padding:0 8px;}"
+            "QPushButton:hover{border-color:#ef4444;color:#ef4444;background:#2a0000;}")
         del_btn.clicked.connect(lambda: self.delete_requested.emit(self._idx))
 
         h.addWidget(num_lbl); h.addWidget(icon_lbl)
@@ -277,7 +298,7 @@ class StepRow(QFrame):
         # Param panel (hidden by default)
         self._param_frame = QFrame()
         self._param_frame.setStyleSheet(
-            "QFrame{background:#0d0f14;border:none;"
+            "QFrame{background:#20242e;border:none;"
             "border-top:1px solid #4a9eff44;border-radius:0 0 5px 5px;}")
         self._param_frame.setVisible(False)
         pv = QVBoxLayout(self._param_frame)
@@ -302,7 +323,7 @@ class StepRow(QFrame):
         for i,(key,lbl_txt,default) in enumerate(defn):
             col_f = QFrame(); col_f.setStyleSheet("QFrame{background:transparent;border:none;}")
             cv = QVBoxLayout(col_f); cv.setContentsMargins(0,0,0,0); cv.setSpacing(2)
-            cv.addWidget(lbl(lbl_txt,"#4a5568",9,True))
+            cv.addWidget(lbl(lbl_txt,"#64748b",9,True))
             val = params.get(key, default)
             if key in SELECT_PARAMS:
                 w = _field_combo(SELECT_PARAMS[key], val)
@@ -327,17 +348,17 @@ class StepRow(QFrame):
     def _apply_params(self):
         self._param_lbl.setText(self._param_summary())
         self.setStyleSheet(
-            "QFrame{background:#0a0c10;border:1px solid #1e2433;border-radius:5px;}")
+            "QFrame{background:#16191f;border:1px solid #3a4055;border-radius:5px;}")
 
     def _toggle_expand(self):
         self._expanded = not self._expanded
         self._param_frame.setVisible(self._expanded)
         if self._expanded:
             self.setStyleSheet(
-                "QFrame{background:#0a0c10;border:1px solid #4a9eff;border-radius:5px;}")
+                "QFrame{background:#16191f;border:1px solid #4a9eff;border-radius:5px;}")
         else:
             self.setStyleSheet(
-                "QFrame{background:#0a0c10;border:1px solid #1e2433;border-radius:5px;}")
+                "QFrame{background:#16191f;border:1px solid #3a4055;border-radius:5px;}")
 
     def update_index(self, idx):
         self._idx = idx
@@ -358,23 +379,23 @@ class RecipeEditor(QFrame):
         self._load_to_process_fn = None
         self._step_rows = []
         self.setStyleSheet(
-            "QFrame{background:#0d0f14;border:1px solid #1e2433;border-radius:6px;}")
+            "QFrame{background:#20242e;border:1px solid #3a4055;border-radius:6px;}")
         v = QVBoxLayout(self); v.setContentsMargins(0,0,0,0); v.setSpacing(0)
 
         # Header
         hdr = QFrame()
         hdr.setStyleSheet(
-            "QFrame{background:#0a0c10;border:none;border-bottom:1px solid #1e2433;"
+            "QFrame{background:#16191f;border:none;border-bottom:1px solid #3a4055;"
             "border-radius:6px 6px 0 0;}")
         hh = QHBoxLayout(hdr); hh.setContentsMargins(12,8,12,8); hh.setSpacing(8)
         self._title_lbl = QLabel("— Select a recipe —")
         self._title_lbl.setFont(QFont("Segoe UI",13,600))
-        self._title_lbl.setStyleSheet("color:#c5cdd9;background:transparent;")
+        self._title_lbl.setStyleSheet("color:#e2e8f0;background:transparent;")
         eng_badge = QLabel("Engineer")
         eng_badge.setStyleSheet(
-            "color:#4a9eff;background:#0d1520;border:1px solid #4a9eff;"
+            "color:#4a9eff;background:#1e2d47;border:1px solid #4a9eff;"
             "border-radius:10px;padding:1px 8px;font-size:10px;")
-        self._dup_btn = _btn("Duplicate","#8892a4",h=26)
+        self._dup_btn = _btn("Duplicate","#94a3b8",h=26)
         self._dup_btn.clicked.connect(self._duplicate)
         self._save_btn = _btn("💾 Save","#22c55e",h=26)
         self._save_btn.clicked.connect(self._save)
@@ -388,8 +409,8 @@ class RecipeEditor(QFrame):
         scroll = QScrollArea(); scroll.setWidgetResizable(True)
         scroll.setStyleSheet(
             "QScrollArea{background:transparent;border:none;}"
-            "QScrollBar:vertical{width:6px;background:#0a0c10;}"
-            "QScrollBar::handle:vertical{background:#1e2433;border-radius:3px;}")
+            "QScrollBar:vertical{width:6px;background:#16191f;}"
+            "QScrollBar::handle:vertical{background:#3a4055;border-radius:3px;}")
         inner = QWidget(); inner.setStyleSheet("background:transparent;")
         self._body = QVBoxLayout(inner)
         self._body.setContentsMargins(12,10,12,10); self._body.setSpacing(8)
@@ -408,10 +429,10 @@ class RecipeEditor(QFrame):
         # Footer
         ftr = QFrame()
         ftr.setStyleSheet(
-            "QFrame{background:#0a0c10;border:none;border-top:1px solid #1e2433;"
+            "QFrame{background:#16191f;border:none;border-top:1px solid #3a4055;"
             "border-radius:0 0 6px 6px;}")
         fh = QHBoxLayout(ftr); fh.setContentsMargins(12,7,12,7); fh.setSpacing(8)
-        self._ts_lbl = lbl("No recipe loaded","#2a3444",10)
+        self._ts_lbl = lbl("No recipe loaded","#64748b",10)
         load_btn = _btn("▶ Load to Process","#eab308",h=28)
         load_btn.clicked.connect(self._load_to_process)
         fh.addWidget(self._ts_lbl,1); fh.addWidget(load_btn)
@@ -430,7 +451,7 @@ class RecipeEditor(QFrame):
         for i,(attr,lbl_txt,default) in enumerate(fields):
             f = QFrame(); f.setStyleSheet("QFrame{background:transparent;border:none;}")
             fv = QVBoxLayout(f); fv.setContentsMargins(0,0,0,0); fv.setSpacing(2)
-            fv.addWidget(lbl(lbl_txt,"#4a5568",9,True))
+            fv.addWidget(lbl(lbl_txt,"#64748b",9,True))
             e = _field_input(default)
             e.textChanged.connect(self._on_meta_changed)
             setattr(self,attr,e); fv.addWidget(e)
@@ -439,9 +460,9 @@ class RecipeEditor(QFrame):
 
     def _build_steps_header(self):
         row = QHBoxLayout(); row.setSpacing(6)
-        row.addWidget(lbl("STEPS","#4a5568",9,True))
+        row.addWidget(lbl("STEPS","#64748b",9,True))
         row.addStretch()
-        add_btn = _btn("＋ Add Step","#8892a4",h=24)
+        add_btn = _btn("＋ Add Step","#94a3b8",h=24)
         add_btn.clicked.connect(self._add_step)
         row.addWidget(add_btn)
         self._body.addLayout(row)
@@ -497,14 +518,14 @@ class RecipeEditor(QFrame):
         items = list(STEP_TYPES.keys())
         dlg = QDialog(self); dlg.setWindowTitle("Add Step"); dlg.setFixedSize(280,360)
         v = QVBoxLayout(dlg)
-        v.addWidget(lbl("Select step type:","#8892a4",12))
+        v.addWidget(lbl("Select step type:","#94a3b8",12))
         from PyQt6.QtWidgets import QListWidget
         lst = QListWidget()
         lst.setStyleSheet(
-            "QListWidget{background:#0d0f14;border:1px solid #1e2433;color:#c5cdd9;"
+            "QListWidget{background:#20242e;border:1px solid #3a4055;color:#e2e8f0;"
             "font-size:12px;}"
             "QListWidget::item{padding:6px 10px;}"
-            "QListWidget::item:selected{background:#0d1520;color:#4a9eff;}")
+            "QListWidget::item:selected{background:#1e2d47;color:#4a9eff;}")
         for item in items:
             icon = STEP_TYPES[item].get("icon","?")
             lst.addItem(f"{icon}  {item}")
@@ -595,18 +616,18 @@ class RecipeList(QFrame):
         self._items = []
         self._active = -1
         self.setStyleSheet(
-            "QFrame{background:#0d0f14;border:1px solid #1e2433;border-radius:6px;}")
+            "QFrame{background:#20242e;border:1px solid #3a4055;border-radius:6px;}")
         v = QVBoxLayout(self); v.setContentsMargins(0,0,0,0); v.setSpacing(0)
 
         # Header
         hdr = QFrame()
         hdr.setStyleSheet(
-            "QFrame{background:#0a0c10;border:none;border-bottom:1px solid #1e2433;"
+            "QFrame{background:#16191f;border:none;border-bottom:1px solid #3a4055;"
             "border-radius:6px 6px 0 0;}")
         hh = QHBoxLayout(hdr); hh.setContentsMargins(12,8,12,8); hh.setSpacing(6)
         t = QLabel("📋 Recipes"); t.setFont(QFont("Segoe UI",11,600))
-        t.setStyleSheet("color:#c5cdd9;background:transparent;")
-        self._count_lbl = lbl("0","#4a5568",9)
+        t.setStyleSheet("color:#e2e8f0;background:transparent;")
+        self._count_lbl = lbl("0","#64748b",9)
         hh.addWidget(t,1); hh.addWidget(self._count_lbl)
         v.addWidget(hdr)
 
@@ -623,14 +644,14 @@ class RecipeList(QFrame):
         add = QFrame()
         add.setStyleSheet(
             "QFrame{background:transparent;border:none;"
-            "border-top:1px dashed #1e2433;}")
+            "border-top:1px dashed #3a4055;}")
         ah = QHBoxLayout(add); ah.setContentsMargins(12,8,12,8)
         add_btn = QPushButton("＋  New Recipe")
         add_btn.setFixedHeight(36)
         add_btn.setStyleSheet(
             "QPushButton{background:transparent;border:none;"
-            "color:#4a5568;font-size:11px;text-align:left;padding-left:12px;}"
-            "QPushButton:hover{color:#22c55e;background:#161b22;}")
+            "color:#64748b;font-size:11px;text-align:left;padding-left:12px;}"
+            "QPushButton:hover{color:#22c55e;background:#2a2f3d;}")
         add_btn.clicked.connect(self.new_requested.emit)
         ah.addWidget(add_btn)
         v.addWidget(add)
@@ -650,15 +671,15 @@ class RecipeList(QFrame):
         btn = QPushButton()
         btn.setFlat(True)
         border = "border-left:3px solid #4a9eff;" if active else "border-left:3px solid transparent;"
-        bg = "#0d1520" if active else "transparent"
+        bg = "#1e2d47" if active else "transparent"
         btn.setStyleSheet(f"""
             QPushButton{{
                 background:{bg};{border}
-                border-bottom:1px solid #1e2433;
+                border-bottom:1px solid #3a4055;
                 border-top:none;border-right:none;
                 text-align:left;padding:8px 10px;
             }}
-            QPushButton:hover{{background:#161b22;}}
+            QPushButton:hover{{background:#2a2f3d;}}
         """)
         btn.setCursor(Qt.CursorShape.PointingHandCursor)
         btn.clicked.connect(lambda _,i=idx: self.selected.emit(i))
@@ -666,16 +687,18 @@ class RecipeList(QFrame):
         # ใช้ layout ใน widget ที่ crop ลงใน button
         inner = QWidget(); inner.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
         inner.setStyleSheet("background:transparent;")
-        v = QVBoxLayout(inner); v.setContentsMargins(0,0,0,0); v.setSpacing(2)
+        # Sek แก้ความสูงทับ Font
+        v = QVBoxLayout(inner); v.setContentsMargins(0,0,0,0); v.setSpacing(4)
+        btn.setMinimumHeight(64)
         name_lbl = QLabel(r.get("name","Untitled"))
         name_lbl.setFont(QFont("Segoe UI",11,600))
-        name_lbl.setStyleSheet(f"color:{'#4a9eff' if active else '#c5cdd9'};background:transparent;")
+        name_lbl.setStyleSheet(f"color:{'#4a9eff' if active else '#e2e8f0'};background:transparent;")
         prod_lbl = QLabel(f"Product: {r.get('product_id','—')}")
-        prod_lbl.setStyleSheet("color:#4a5568;font-size:10px;background:transparent;")
+        prod_lbl.setStyleSheet("color:#64748b;font-size:10px;background:transparent;")
         n_steps = len(r.get("steps",[]))
         mod = r.get("modified","—")
         info_lbl = QLabel(f"{n_steps} steps · {mod}")
-        info_lbl.setStyleSheet("color:#2a3444;font-size:9px;background:transparent;")
+        info_lbl.setStyleSheet("color:#64748b;font-size:9px;background:transparent;")
         v.addWidget(name_lbl); v.addWidget(prod_lbl); v.addWidget(info_lbl)
 
         bl = QVBoxLayout(btn); bl.setContentsMargins(0,0,0,0)
