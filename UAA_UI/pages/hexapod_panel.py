@@ -87,11 +87,11 @@ AXIS_MAP = {
         "U": ("U",  1), "V": ("V",  1), "W": ("W",  1),
     },
     "Horizontal Left": {
-        "X": ("Z",  1), "Y": ("Y",  1), "Z": ("X",  1),
+        "X": ("Z",  1), "Y": ("Y", -1), "Z": ("X",  1),
         "U": ("V",  1), "V": ("U",  1), "W": ("W",  1),
     },
     "Horizontal Right": {
-        "X": ("Z", -1), "Y": ("Y",  1), "Z": ("X", -1),
+        "X": ("Z", -1), "Y": ("Y",  1), "Z": ("X",  1),
         "U": ("V", -1), "V": ("U", -1), "W": ("W", -1),
     },
 }
@@ -289,14 +289,16 @@ class ConnectWorker(QThread):
 class PosCard(QFrame):
     def __init__(self, axis, unit="mm", color="#4a9eff"):
         super().__init__()
-        self.setStyleSheet("QFrame{background:#0a0c10;border:1px solid #1e2433;border-radius:4px;}")
-        self.setFixedHeight(48)
+        self.setStyleSheet(
+            "QFrame{background:#0a0c10;border:1px solid #1e2433;border-radius:4px;}")
+        self.setFixedHeight(56)
         h = QHBoxLayout(self); h.setContentsMargins(8,4,8,4); h.setSpacing(4)
-        ax_lbl = lbl(axis, "#4a5568", 9, True)
-        ax_lbl.setFixedWidth(14)
-        self._val  = lbl("0.0000", color, 13, True)
-        self._val.setFont(QFont("Consolas", 13, 700))
-        self._unit = lbl(unit, "#2a3444", 9)
+        ax_lbl = lbl(axis, "#4a5568", 12, True)
+        ax_lbl.setFixedWidth(18)
+        self._val = QLabel("0.0000")
+        self._val.setFont(QFont("Consolas", 15, 700))
+        self._val.setStyleSheet(f"color:{color};background:transparent;")
+        self._unit = lbl(unit, "#2a3444", 10)
         h.addWidget(ax_lbl)
         h.addWidget(self._val, 1)
         h.addWidget(self._unit)
@@ -488,20 +490,66 @@ class SingleHexapodWidget(QWidget):
     def _build_position(self, layout):
         sh_row = QHBoxLayout(); sh_row.setSpacing(8)
         sh_row.addWidget(lbl("POSITION","#4a5568",10,True))
-        line = QFrame(); line.setFrameShape(QFrame.Shape.HLine); line.setStyleSheet("background:#1e2433;max-height:1px;"); sh_row.addWidget(line,1)
+        line = QFrame(); line.setFrameShape(QFrame.Shape.HLine)
+        line.setStyleSheet("background:#1e2433;max-height:1px;")
+        sh_row.addWidget(line,1)
         ref_btn = QPushButton("⟳"); ref_btn.setFixedSize(26,22)
-        ref_btn.setStyleSheet("QPushButton{background:#1a1f2e;border:1px solid #1e2433;border-radius:3px;color:#8892a4;font-size:10px;}QPushButton:hover{border-color:#4a9eff;color:#4a9eff;}")
+        ref_btn.setStyleSheet(
+            "QPushButton{background:#1a1f2e;border:1px solid #1e2433;"
+            "border-radius:3px;color:#8892a4;font-size:10px;}"
+            "QPushButton:hover{border-color:#4a9eff;color:#4a9eff;}")
         ref_btn.clicked.connect(self._refresh_pos)
         sh_row.addWidget(ref_btn); layout.addLayout(sh_row)
 
-        pos_row = QHBoxLayout(); pos_row.setSpacing(6)
+        pos_frame = QFrame()
+        pos_frame.setStyleSheet(
+            "QFrame{background:#0a0c10;border:1px solid #1e2433;border-radius:6px;}")
+        pv = QVBoxLayout(pos_frame); pv.setContentsMargins(10,6,10,6); pv.setSpacing(4)
+
+        # แถวเดียว USER | PI
+        row = QHBoxLayout(); row.setSpacing(8)
+
+        # USER coordinates
+        user_lbl = lbl("USER","#22c55e",9,True); user_lbl.setFixedWidth(36)
+        row.addWidget(user_lbl)
+        self._user_pos_lbls = {}
+        for ax in ["X","Y","Z","U","V","W"]:
+            color = "#22c55e" if ax in "XYZ" else "#a3f0c4"
+            unit  = "mm" if ax in "XYZ" else "°"
+            f = QFrame(); f.setStyleSheet("QFrame{background:transparent;border:none;}")
+            fh = QHBoxLayout(f); fh.setContentsMargins(0,0,0,0); fh.setSpacing(2)
+            fh.addWidget(lbl(ax, "#4a5568", 11, True))
+            v = QLabel("0.0000"); v.setFont(QFont("Consolas",14,700))
+            v.setStyleSheet(f"color:{color};background:transparent;")
+            fh.addWidget(v)
+            fh.addWidget(lbl(unit,"#2a3444",9))
+            self._user_pos_lbls[ax] = v
+            row.addWidget(f)
+
+        # Divider
+        div = QFrame(); div.setFrameShape(QFrame.Shape.VLine)
+        div.setStyleSheet("background:#3a4055;max-width:1px;")
+        row.addWidget(div)
+
+        # PI coordinates
+        pi_lbl = lbl("PI","#4a9eff",9,True); pi_lbl.setFixedWidth(20)
+        row.addWidget(pi_lbl)
         self._pos_cards = {}
-        for ax, color in [("X","#4a9eff"),("Y","#4a9eff"),("Z","#4a9eff"),("U","#cba6f7"),("V","#cba6f7"),("W","#cba6f7")]:
-            unit = "mm" if ax in "XYZ" else "deg"
-            card = PosCard(ax, unit, color)
-            self._pos_cards[ax] = card
-            pos_row.addWidget(card)
-        layout.addLayout(pos_row)
+        for ax, color in [("X","#4a9eff"),("Y","#4a9eff"),("Z","#4a9eff"),
+                           ("U","#cba6f7"),("V","#cba6f7"),("W","#cba6f7")]:
+            unit = "mm" if ax in "XYZ" else "°"
+            f = QFrame(); f.setStyleSheet("QFrame{background:transparent;border:none;}")
+            fh = QHBoxLayout(f); fh.setContentsMargins(0,0,0,0); fh.setSpacing(2)
+            fh.addWidget(lbl(ax,"#4a5568",10,True))
+            v = QLabel("0.0000"); v.setFont(QFont("Consolas",13,700))
+            v.setStyleSheet(f"color:{color};background:transparent;")
+            fh.addWidget(v)
+            fh.addWidget(lbl(unit,"#2a3444",9))
+            self._pos_cards[ax] = v
+            row.addWidget(f)
+
+        pv.addLayout(row)
+        layout.addWidget(pos_frame)
 
     # ── Jog ──────────────────────────────────────
     def _build_jog(self, layout):
@@ -740,9 +788,17 @@ class SingleHexapodWidget(QWidget):
         if not self._drv: return
         try:
             pos = self._drv.pos()
+            # PI coordinates
             for ax, val in pos.items():
                 if ax in self._pos_cards:
-                    self._pos_cards[ax].set_value(float(val))
+                    self._pos_cards[ax].setText(f"{float(val):.4f}")
+
+            # USER coordinates — แปลงตาม AXIS_MAP
+            mapping = AXIS_MAP[self._orient]
+            for user_ax, (pi_ax, mult) in mapping.items():
+                if user_ax in self._user_pos_lbls and pi_ax in pos:
+                    user_val = float(pos[pi_ax]) * mult
+                    self._user_pos_lbls[user_ax].setText(f"{user_val:.4f}")
         except: pass
 
     # ── Jog ──────────────────────────────────────
