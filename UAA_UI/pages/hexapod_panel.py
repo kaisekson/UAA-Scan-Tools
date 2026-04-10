@@ -202,22 +202,25 @@ class GCSDriver:
     def frf(self):
         axes = list(self._dev.axes)
         self._dev.FRF(axes)
+        pitools.waitontarget(self._dev, axes=axes, timeout=60)
 
     def home(self):
         axes = list(self._dev.axes)
         self._dev.MOV({a: 0.0 for a in axes})
 
     def send_raw(self, cmd):
-        """ส่ง GCS command ดิบ"""
-        return self._dev.Send(cmd)
+        """ส่ง GCS command ดิบผ่าน socket"""
+        self._dev.send(cmd.strip() + "\n")
 
     def query_raw(self, cmd):
         """ส่ง GCS query แล้วรับ response"""
-        return self._dev.qGCS(cmd)
+        self._dev.send(cmd.strip() + "\n")
+        import time; time.sleep(0.05)
+        return self._dev.read()
 
 
 class ConnectWorker(QThread):
-    success = pyqtSignal(str)
+    success = pyqtSignal(str, object)  # idn, driver
     failed  = pyqtSignal(str)
     def __init__(self, ip, port):
         super().__init__(); self.ip=ip; self.port=port
@@ -226,8 +229,7 @@ class ConnectWorker(QThread):
             d = GCSDriver(self.ip, self.port)
             d.connect()
             idn = d.idn()
-            d.disconnect()
-            self.success.emit(idn)
+            self.success.emit(idn, d)  # ส่ง driver กลับมาเลย ไม่ disconnect
         except Exception as e:
             self.failed.emit(str(e))
 
@@ -661,16 +663,8 @@ class SingleHexapodWidget(QWidget):
         self._worker.failed.connect(self._on_fail)
         self._worker.start()
 
-    def _on_ok(self, idn):
-        ip   = self.ip_edit.text().strip()
-        port = int(self.port_edit.text() or 50000)
-        drv  = GCSDriver(ip, port)
-        try:
-            drv.connect()
-            self._drv = drv
-        except Exception as e:
-            self._log_msg(f"Post-connect error: {e}", "#ef4444")
-            return
+    def _on_ok(self, idn, drv):
+        self._drv = drv  # รับ driver ที่ connect แล้วมาเลย ไม่ต้อง connect ใหม่
         self.status_lbl.setText("●  Connected"); self.status_lbl.setStyleSheet("color:#22c55e;font-size:12px;font-weight:600;")
         self.idn_lbl.setText(f"IDN: {idn}"); self.idn_lbl.setStyleSheet("color:#8892a4;font-size:11px;")
         self.conn_btn.setText("✗  Disconnect"); self.conn_btn.setEnabled(True)
