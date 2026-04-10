@@ -111,7 +111,7 @@ ORIENT_WARNING = {
 
 
 class JogWorker(QThread):
-    """รัน jog command ใน background ไม่ block UI"""
+    """รัน jog command — fire and forget ไม่ wait_target"""
     finished = pyqtSignal()
     error    = pyqtSignal(str)
 
@@ -126,7 +126,7 @@ class JogWorker(QThread):
         try:
             self._drv.vel(self._axis, self._vel)
             self._drv.mov_relative(self._axis, self._delta)
-            self._drv.wait_target(self._axis, timeout=10)
+            # ไม่ wait_target — ส่งแล้วจบ
             self.finished.emit()
         except Exception as e:
             self.error.emit(str(e))
@@ -223,8 +223,8 @@ class GCSDriver:
         self.send_raw(f"MOV {axis} {val}")
 
     def mov_relative(self, axis, delta):
-        cur = self.pos().get(axis, 0.0)
-        self.send_raw(f"MOV {axis} {cur + delta}")
+        """MVR = move relative โดยตรง ไม่ต้อง query POS ก่อน"""
+        self.send_raw(f"MVR {axis} {delta}")
 
     def wait_target(self, axes=None, timeout=10):
         """Poll ONT? จนทุก axis on target"""
@@ -765,32 +765,18 @@ class SingleHexapodWidget(QWidget):
         self._vel = val
         self._vel_edit.setText(f"{val:.3f}")
 
-    def _set_jog_enabled(self, enabled):
-        """Enable/disable jog buttons ระหว่าง move"""
-        for btn in [self._jog_up, self._jog_down,
-                    self._jog_left, self._jog_right,
-                    self._jog_zup, self._jog_zdown]:
-            btn.setEnabled(enabled)
-        for bm, bp in self._rot_btns.values():
-            bm.setEnabled(enabled)
-            bp.setEnabled(enabled)
-
     def _jog(self, axis, direction):
         if not self._drv:
             self._log_msg("Not connected","#ef4444"); return
-        if not self._jog_zup.isEnabled(): return  # กำลัง move อยู่
         ctrl_axis, mult = AXIS_MAP[self._orient].get(axis, (axis, 1))
         delta = mult * direction * self._step
         self._log_msg(
             f"JOG {axis}{'+' if direction>0 else '-'}  →  "
-            f"MOV {ctrl_axis} {delta:+.4f} mm  [{self._orient}]"
+            f"MVR {ctrl_axis} {delta:+.4f} mm  [{self._orient}]"
         )
-        self._set_jog_enabled(False)
         worker = JogWorker(self._drv, ctrl_axis, delta, self._vel)
         worker.finished.connect(self._refresh_pos)
-        worker.finished.connect(lambda: self._set_jog_enabled(True))
         worker.error.connect(lambda e: self._log_msg(e,"#ef4444"))
-        worker.error.connect(lambda _: self._set_jog_enabled(True))
         worker.start()
         self._jog_worker = worker
 
