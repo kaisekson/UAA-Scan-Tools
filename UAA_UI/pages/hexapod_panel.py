@@ -187,15 +187,11 @@ class GCSDriver:
     def query_raw(self, cmd):
         """ส่ง query + LF แล้วรับ response"""
         self._sock.sendall((cmd.strip() + "\n").encode())
-        time.sleep(0.05)
+        time.sleep(0.02)
+        self._sock.settimeout(0.5)
         data = b""
-        self._sock.settimeout(2.0)
         try:
-            while True:
-                chunk = self._sock.recv(self.BUFFER)
-                data += chunk
-                if data.endswith(b"\n"):
-                    break
+            data = self._sock.recv(self.BUFFER)
         except: pass
         self._sock.settimeout(self.TIMEOUT)
         return data.decode().strip()
@@ -632,6 +628,7 @@ class SingleHexapodWidget(QWidget):
         cmds = [
             ("Home",      self._home,    "#4a9eff"),
             ("FRF",       self._frf,     "#4a9eff"),
+            ("POS?",      self._pos_cmd, "#4a9eff"),
             ("ONT?",      self._ont,     "#4a9eff"),
             ("ERR?",      self._err_cmd, "#4a9eff"),
             ("Servo ON",  self._svo_on,  "#22c55e"),
@@ -768,21 +765,34 @@ class SingleHexapodWidget(QWidget):
         self._vel = val
         self._vel_edit.setText(f"{val:.3f}")
 
+    def _set_jog_enabled(self, enabled):
+        """Enable/disable jog buttons ระหว่าง move"""
+        for btn in [self._jog_up, self._jog_down,
+                    self._jog_left, self._jog_right,
+                    self._jog_zup, self._jog_zdown]:
+            btn.setEnabled(enabled)
+        for bm, bp in self._rot_btns.values():
+            bm.setEnabled(enabled)
+            bp.setEnabled(enabled)
+
     def _jog(self, axis, direction):
         if not self._drv:
             self._log_msg("Not connected","#ef4444"); return
-        # Map user axis → controller axis ตาม orientation
+        if not self._jog_zup.isEnabled(): return  # กำลัง move อยู่
         ctrl_axis, mult = AXIS_MAP[self._orient].get(axis, (axis, 1))
         delta = mult * direction * self._step
         self._log_msg(
             f"JOG {axis}{'+' if direction>0 else '-'}  →  "
             f"MOV {ctrl_axis} {delta:+.4f} mm  [{self._orient}]"
         )
+        self._set_jog_enabled(False)
         worker = JogWorker(self._drv, ctrl_axis, delta, self._vel)
         worker.finished.connect(self._refresh_pos)
+        worker.finished.connect(lambda: self._set_jog_enabled(True))
         worker.error.connect(lambda e: self._log_msg(e,"#ef4444"))
+        worker.error.connect(lambda _: self._set_jog_enabled(True))
         worker.start()
-        self._jog_worker = worker   # keep reference
+        self._jog_worker = worker
 
     def _pos_val(self, axis):
         try: return float(self._pos_cards[axis]._val.text())
@@ -828,6 +838,15 @@ class SingleHexapodWidget(QWidget):
     def _err_cmd(self):
         if not self._drv: self._log_msg("Not connected","#ef4444"); return
         try: self._log_msg(f"ERR? → {self._drv.err()}")
+        except Exception as e: self._log_msg(str(e),"#ef4444")
+
+    def _pos_cmd(self):
+        if not self._drv: self._log_msg("Not connected","#ef4444"); return
+        try:
+            pos = self._drv.pos()
+            msg = "  ".join([f"{k}={v:.4f}" for k,v in pos.items()])
+            self._log_msg(f"POS? → {msg}")
+            self._refresh_pos()
         except Exception as e: self._log_msg(str(e),"#ef4444")
 
     def _svo_on(self):
