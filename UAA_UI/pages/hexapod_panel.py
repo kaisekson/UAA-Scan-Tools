@@ -339,6 +339,7 @@ class SingleHexapodWidget(QWidget):
         self._cmds     = load_commands()
         self._continuous_axis = None
         self._continuous_dir  = 1
+        self._home_pos = {ax: 0.0 for ax in ["X","Y","Z","U","V","W"]}
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(14,12,14,12)
@@ -506,49 +507,83 @@ class SingleHexapodWidget(QWidget):
             "QFrame{background:#0a0c10;border:1px solid #1e2433;border-radius:6px;}")
         pv = QVBoxLayout(pos_frame); pv.setContentsMargins(10,6,10,6); pv.setSpacing(4)
 
-        # แถวเดียว USER | PI
-        row = QHBoxLayout(); row.setSpacing(8)
+        axes_xyz = ["X","Y","Z","U","V","W"]
 
-        # USER coordinates
-        user_lbl = lbl("USER","#22c55e",9,True); user_lbl.setFixedWidth(36)
-        row.addWidget(user_lbl)
-        self._user_pos_lbls = {}
-        for ax in ["X","Y","Z","U","V","W"]:
-            color = "#22c55e" if ax in "XYZ" else "#a3f0c4"
-            unit  = "mm" if ax in "XYZ" else "°"
-            f = QFrame(); f.setStyleSheet("QFrame{background:transparent;border:none;}")
-            fh = QHBoxLayout(f); fh.setContentsMargins(0,0,0,0); fh.setSpacing(2)
-            fh.addWidget(lbl(ax, "#4a5568", 11, True))
-            v = QLabel("0.0000"); v.setFont(QFont("Consolas",14,700))
-            v.setStyleSheet(f"color:{color};background:transparent;")
-            fh.addWidget(v)
-            fh.addWidget(lbl(unit,"#2a3444",9))
-            self._user_pos_lbls[ax] = v
-            row.addWidget(f)
+        def _pos_row(label, color_xyz, color_uvw, font_size=14):
+            row = QHBoxLayout(); row.setSpacing(6)
+            lbl_w = QLabel(label); lbl_w.setFixedWidth(46)
+            lbl_w.setFont(QFont("Segoe UI",9,700))
+            lbl_w.setStyleSheet(f"color:{color_xyz};background:transparent;")
+            row.addWidget(lbl_w)
+            vals = {}
+            for ax in axes_xyz:
+                color = color_xyz if ax in "XYZ" else color_uvw
+                unit  = "mm" if ax in "XYZ" else "°"
+                f = QFrame(); f.setStyleSheet("QFrame{background:transparent;border:none;}")
+                fh = QHBoxLayout(f); fh.setContentsMargins(0,0,0,0); fh.setSpacing(2)
+                fh.addWidget(lbl(ax,"#4a5568",10,True))
+                v = QLabel("0.0000"); v.setFont(QFont("Consolas",font_size,700))
+                v.setStyleSheet(f"color:{color};background:transparent;")
+                fh.addWidget(v)
+                fh.addWidget(lbl(unit,"#2a3444",9))
+                vals[ax] = v
+                row.addWidget(f)
+            return row, vals
 
-        # Divider
-        div = QFrame(); div.setFrameShape(QFrame.Shape.VLine)
-        div.setStyleSheet("background:#3a4055;max-width:1px;")
-        row.addWidget(div)
+        # USER row
+        user_row, self._user_pos_lbls = _pos_row("USER", "#22c55e", "#a3f0c4", 14)
+        pv.addLayout(user_row)
 
-        # PI coordinates
-        pi_lbl = lbl("PI","#4a9eff",9,True); pi_lbl.setFixedWidth(20)
-        row.addWidget(pi_lbl)
+        # HOME row
+        home_row, self._home_pos_lbls = _pos_row("HOME", "#64748b", "#3a4055", 12)
+        pv.addLayout(home_row)
+
+        # DELTA row
+        delta_row, self._delta_pos_lbls = _pos_row("DELTA", "#eab308", "#a37c00", 12)
+        pv.addLayout(delta_row)
+
+        # Set Home button
+        set_home_row = QHBoxLayout()
+        set_home_btn = QPushButton("📍 Set Home")
+        set_home_btn.setFixedHeight(26)
+        set_home_btn.setStyleSheet(
+            "QPushButton{background:#1a1f2e;border:1px solid #64748b;"
+            "border-radius:4px;color:#64748b;font-size:11px;font-weight:600;padding:0 12px;}"
+            "QPushButton:hover{border-color:#22c55e;color:#22c55e;background:#0d1a0d;}")
+        set_home_btn.clicked.connect(self._set_home)
+        go_home_btn = QPushButton("🏠 Go Home")
+        go_home_btn.setFixedHeight(26)
+        go_home_btn.setStyleSheet(
+            "QPushButton{background:#1a1f2e;border:1px solid #4a9eff;"
+            "border-radius:4px;color:#4a9eff;font-size:11px;font-weight:600;padding:0 12px;}"
+            "QPushButton:hover{border-color:#4a9eff;color:#000;background:#4a9eff;}")
+        go_home_btn.clicked.connect(self._go_home)
+        set_home_row.addWidget(set_home_btn)
+        set_home_row.addWidget(go_home_btn)
+        set_home_row.addStretch()
+        pv.addLayout(set_home_row)
+
+        # PI row (เล็กลง ไว้ดู raw)
         self._pos_cards = {}
+        pi_row = QHBoxLayout(); pi_row.setSpacing(6)
+        pi_lbl_w = QLabel("PI"); pi_lbl_w.setFixedWidth(46)
+        pi_lbl_w.setFont(QFont("Segoe UI",9,700))
+        pi_lbl_w.setStyleSheet("color:#3a4055;background:transparent;")
+        pi_row.addWidget(pi_lbl_w)
         for ax, color in [("X","#4a9eff"),("Y","#4a9eff"),("Z","#4a9eff"),
                            ("U","#cba6f7"),("V","#cba6f7"),("W","#cba6f7")]:
             unit = "mm" if ax in "XYZ" else "°"
             f = QFrame(); f.setStyleSheet("QFrame{background:transparent;border:none;}")
             fh = QHBoxLayout(f); fh.setContentsMargins(0,0,0,0); fh.setSpacing(2)
-            fh.addWidget(lbl(ax,"#4a5568",10,True))
-            v = QLabel("0.0000"); v.setFont(QFont("Consolas",13,700))
+            fh.addWidget(lbl(ax,"#2a3444",9,True))
+            v = QLabel("0.0000"); v.setFont(QFont("Consolas",11,700))
             v.setStyleSheet(f"color:{color};background:transparent;")
             fh.addWidget(v)
-            fh.addWidget(lbl(unit,"#2a3444",9))
+            fh.addWidget(lbl(unit,"#2a3444",8))
             self._pos_cards[ax] = v
-            row.addWidget(f)
+            pi_row.addWidget(f)
+        pv.addLayout(pi_row)
 
-        pv.addLayout(row)
         layout.addWidget(pos_frame)
 
     # ── Jog ──────────────────────────────────────
@@ -788,18 +823,64 @@ class SingleHexapodWidget(QWidget):
         if not self._drv: return
         try:
             pos = self._drv.pos()
-            # PI coordinates
+
+            # PI raw
             for ax, val in pos.items():
                 if ax in self._pos_cards:
                     self._pos_cards[ax].setText(f"{float(val):.4f}")
 
-            # USER coordinates — แปลงตาม AXIS_MAP
+            # USER — แปลงตาม AXIS_MAP
+            mapping = AXIS_MAP[self._orient]
+            user_vals = {}
+            for user_ax, (pi_ax, mult) in mapping.items():
+                if pi_ax in pos:
+                    user_vals[user_ax] = float(pos[pi_ax]) * mult
+                    if user_ax in self._user_pos_lbls:
+                        self._user_pos_lbls[user_ax].setText(
+                            f"{user_vals[user_ax]:.4f}")
+
+            # DELTA = USER - HOME
+            for ax in ["X","Y","Z","U","V","W"]:
+                if ax in user_vals and ax in self._delta_pos_lbls:
+                    delta = user_vals[ax] - self._home_pos.get(ax, 0.0)
+                    color = "#ef4444" if abs(delta) > 0.001 else "#22c55e"
+                    self._delta_pos_lbls[ax].setText(f"{delta:+.4f}")
+                    self._delta_pos_lbls[ax].setStyleSheet(
+                        f"color:{color};background:transparent;")
+        except: pass
+
+    def _set_home(self):
+        """บันทึก USER position ปัจจุบันเป็น HOME"""
+        if not self._drv: return
+        try:
+            pos = self._drv.pos()
             mapping = AXIS_MAP[self._orient]
             for user_ax, (pi_ax, mult) in mapping.items():
-                if user_ax in self._user_pos_lbls and pi_ax in pos:
-                    user_val = float(pos[pi_ax]) * mult
-                    self._user_pos_lbls[user_ax].setText(f"{user_val:.4f}")
-        except: pass
+                if pi_ax in pos:
+                    self._home_pos[user_ax] = float(pos[pi_ax]) * mult
+                    if user_ax in self._home_pos_lbls:
+                        self._home_pos_lbls[user_ax].setText(
+                            f"{self._home_pos[user_ax]:.4f}")
+            self._log_msg("Home position set")
+            self._refresh_pos()
+        except Exception as e:
+            self._log_msg(str(e), "#ef4444")
+
+    def _go_home(self):
+        """Move กลับไป HOME position"""
+        if not self._drv:
+            self._log_msg("Not connected", "#ef4444"); return
+        try:
+            mapping = AXIS_MAP[self._orient]
+            for user_ax, (pi_ax, mult) in mapping.items():
+                home_user = self._home_pos.get(user_ax, 0.0)
+                pi_val = home_user * mult  # แปลงกลับเป็น PI coordinates
+                self._drv.vel(pi_ax, self._vel)
+                self._drv.mov(pi_ax, pi_val)
+            self._log_msg("Going to Home position")
+            QTimer.singleShot(500, self._refresh_pos)
+        except Exception as e:
+            self._log_msg(str(e), "#ef4444")
 
     # ── Jog ──────────────────────────────────────
     def _set_mode(self, mode):
