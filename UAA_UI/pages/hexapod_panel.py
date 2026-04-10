@@ -9,7 +9,7 @@ PI Hexapod Panel
 - Response log
 """
 
-import os, json, datetime, time
+import os, json, datetime, time, socket
 try:
     from pipython import GCSDevice, pitools
     HAS_PIPYTHON = True
@@ -144,79 +144,131 @@ def load_commands():
 # ══════════════════════════════════════════════
 
 class GCSDriver:
-    """PI Hexapod driver using pipython (GCS2)"""
+    """PI Hexapod driver — raw TCP socket (เหมือน Hercules)"""
+    BUFFER  = 4096
+    TIMEOUT = 5.0
+
     def __init__(self, ip, port=50000):
         self.ip   = ip
         self.port = port
-        self._dev = None
+        self._sock = None
+        self._axes = []   # cache axis names
+
+    # ── Low-level socket ──────────────────────
 
     def connect(self):
-        if not HAS_PIPYTHON:
-            raise RuntimeError("pipython not installed — pip install pipython")
-        self._dev = GCSDevice("C-887")
-        self._dev.ConnectTCPIP(ipaddress=self.ip, ipport=self.port)
+        self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self._sock.settimeout(self.TIMEOUT)
+        self._sock.connect((self.ip, self.port))
+        time.sleep(0.2)
+        # flush greeting ถ้ามี
+        self._sock.settimeout(0.3)
+        try: self._sock.recv(self.BUFFER)
+        except: pass
+        self._sock.settimeout(self.TIMEOUT)
+        # cache axis list
+        try:
+            resp = self.query_raw("SAI?")
+            self._axes = [a.strip() for a in resp.strip().split("\n") if a.strip()]
+        except:
+            self._axes = ["1","2","3","4","5","6"]
 
     def disconnect(self):
-        if self._dev:
-            try: self._dev.CloseConnection()
+        if self._sock:
+            try: self._sock.close()
             except: pass
-            self._dev = None
-
-    def idn(self):
-        return self._dev.qIDN().strip()
-
-    def pos(self):
-        """คืน dict {axis: value}"""
-        return self._dev.qPOS()
-
-    def ont(self):
-        return str(self._dev.qONT())
-
-    def err(self):
-        return str(self._dev.qERR())
-
-    def mov(self, axis, val):
-        self._dev.MOV(axis, val)
-
-    def mov_relative(self, axis, delta):
-        pos = self._dev.qPOS(axis)[axis]
-        self._dev.MOV(axis, pos + delta)
-
-    def wait_target(self, axes=None, timeout=10):
-        pitools.waitontarget(self._dev, axes=axes, timeout=timeout)
-
-    def vel(self, axis, v):
-        self._dev.VEL(axis, v)
-
-    def halt(self):
-        self._dev.HLT()
-
-    def svo_on(self):
-        axes = list(self._dev.axes)
-        self._dev.SVO({a: True for a in axes})
-
-    def svo_off(self):
-        axes = list(self._dev.axes)
-        self._dev.SVO({a: False for a in axes})
-
-    def frf(self):
-        axes = list(self._dev.axes)
-        self._dev.FRF(axes)
-        pitools.waitontarget(self._dev, axes=axes, timeout=60)
-
-    def home(self):
-        axes = list(self._dev.axes)
-        self._dev.MOV({a: 0.0 for a in axes})
+            self._sock = None
 
     def send_raw(self, cmd):
-        """ส่ง GCS command ดิบผ่าน socket"""
-        self._dev.send(cmd.strip() + "\n")
+        """ส่ง command ดิบ + LF"""
+        self._sock.sendall((cmd.strip() + "\n").encode())
+        time.sleep(0.02)
 
     def query_raw(self, cmd):
-        """ส่ง GCS query แล้วรับ response"""
-        self._dev.send(cmd.strip() + "\n")
-        import time; time.sleep(0.05)
-        return self._dev.read()
+        """ส่ง query + LF แล้วรับ response"""
+        self._sock.sendall((cmd.strip() + "\n").encode())
+        time.sleep(0.05)
+        data = b""
+        self._sock.settimeout(2.0)
+        try:
+            while True:
+                chunk = self._sock.recv(self.BUFFER)
+                data += chunk
+                if data.endswith(b"\n"):
+                    break
+        except: pass
+        self._sock.settimeout(self.TIMEOUT)
+        return data.decode().strip()
+
+    # ── High-level commands ───────────────────
+
+    def idn(self):
+        return self.query_raw("*IDN?")
+
+    def pos(self):
+        """คืน dict {axis: float}"""
+        resp = self.query_raw("POS?")
+        result = {}
+        for line in resp.strip().split("\n"):
+            line = line.strip()
+            if "=" in line:
+                k, v = line.split("=", 1)
+                try: result[k.strip()] = float(v.strip())
+                except: pass
+        return result
+
+    def ont(self):
+        return self.query_raw("ONT?")
+
+    def err(self):
+        return self.query_raw("ERR?")
+
+    def mov(self, axis, val):
+        self.send_raw(f"MOV {axis} {val}")
+
+    def mov_relative(self, axis, delta):
+        cur = self.pos().get(axis, 0.0)
+        self.send_raw(f"MOV {axis} {cur + delta}")
+
+    def wait_target(self, axes=None, timeout=10):
+        """Poll ONT? จนทุก axis on target"""
+        deadline = time.time() + timeout
+        while time.time() < deadline:
+            resp = self.query_raw("ONT?")
+            vals = {}
+            for line in resp.strip().split("\n"):
+                if "=" in line:
+                    k, v = line.split("=", 1)
+                    try: vals[k.strip()] = int(v.strip())
+                    except: pass
+            check = list(axes) if axes else self._axes
+            if all(vals.get(a, 0) == 1 for a in check):
+                return
+            time.sleep(0.05)
+        raise TimeoutError("wait_target timeout")
+
+    def vel(self, axis, v):
+        self.send_raw(f"VEL {axis} {v}")
+
+    def halt(self):
+        self.send_raw("HLT")
+
+    def svo_on(self):
+        for a in self._axes:
+            self.send_raw(f"SVO {a} 1")
+
+    def svo_off(self):
+        for a in self._axes:
+            self.send_raw(f"SVO {a} 0")
+
+    def frf(self):
+        for a in self._axes:
+            self.send_raw(f"FRF {a}")
+        self.wait_target(timeout=60)
+
+    def home(self):
+        for a in self._axes:
+            self.send_raw(f"MOV {a} 0")
 
 
 class ConnectWorker(QThread):
