@@ -43,14 +43,15 @@ def load_commands():
 # ══════════════════════════════════════════════
 
 class CartesianDriver:
+    """PI Cartesian driver — raw TCP socket + ACS SPiiPlus protocol (เหมือน linear)"""
     BUFFER  = 4096
     TIMEOUT = 5.0
+    AXES    = [0, 1, 2]   # axis index 0=X, 1=Y, 2=Z
 
-    def __init__(self, ip, port=50000):
+    def __init__(self, ip, port=701):
         self.ip    = ip
         self.port  = port
         self._sock = None
-        self._axes = ["1","2","3"]  # cache axis names
 
     def connect(self):
         self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -61,13 +62,6 @@ class CartesianDriver:
         try: self._sock.recv(self.BUFFER)
         except: pass
         self._sock.settimeout(self.TIMEOUT)
-        # get axis names
-        try:
-            resp = self.query_raw("SAI?")
-            axes = [a.strip() for a in resp.strip().split("\n") if a.strip()]
-            if axes: self._axes = axes[:3]
-        except:
-            self._axes = ["1","2","3"]
 
     def disconnect(self):
         if self._sock:
@@ -76,12 +70,14 @@ class CartesianDriver:
             self._sock = None
 
     def send_raw(self, cmd):
-        self._sock.sendall((cmd.strip() + "\n").encode())
+        """ส่ง command + CR (ACS SPiiPlus)"""
+        self._sock.sendall((cmd.strip() + "\r").encode())
         time.sleep(0.02)
 
     def query_raw(self, cmd):
-        self._sock.sendall((cmd.strip() + "\n").encode())
-        time.sleep(0.02)
+        """ส่ง query + CR แล้วรับ response"""
+        self._sock.sendall((cmd.strip() + "\r").encode())
+        time.sleep(0.05)
         self._sock.settimeout(0.5)
         data = b""
         try: data = self._sock.recv(self.BUFFER)
@@ -89,70 +85,58 @@ class CartesianDriver:
         self._sock.settimeout(self.TIMEOUT)
         return data.decode().strip()
 
+    def _parse_val(self, resp):
+        """parse response format: ?VARNAME    value ::"""
+        parts = resp.replace("::", "").split()
+        for p in parts:
+            try: return float(p)
+            except: pass
+        return 0.0
+
     def idn(self):
-        return self.query_raw("*IDN?")
+        return self.query_raw("?VR")
 
     def pos(self):
         """คืน dict {X: val, Y: val, Z: val}"""
-        resp = self.query_raw("POS?")
         result = {}
-        labels = ["X","Y","Z"]
-        for i, line in enumerate(resp.strip().split("\n")):
-            if "=" in line and i < 3:
-                try:
-                    result[labels[i]] = float(line.split("=")[1].strip())
-                except: pass
+        for label, idx in [("X",0),("Y",1),("Z",2)]:
+            try:
+                resp = self.query_raw(f"?FPOS{idx}")
+                result[label] = self._parse_val(resp)
+            except: result[label] = 0.0
         return result
 
-    def ont(self):  return self.query_raw("ONT?")
-    def err(self):  return self.query_raw("ERR?")
+    def ont(self):
+        return self.query_raw("?MST(0)")
+
+    def err(self):
+        return self.query_raw("??")
 
     def mov_xyz(self, x=None, y=None, z=None):
-        vals = [(x,0),(y,1),(z,2)]
-        for val, idx in vals:
-            if val is not None and idx < len(self._axes):
-                self.send_raw(f"MOV {self._axes[idx]} {val}")
+        for val, idx in [(x,0),(y,1),(z,2)]:
+            if val is not None:
+                self.send_raw(f"PTP {idx}, {val}")
 
     def mov_relative(self, axis_label, delta):
         idx = {"X":0,"Y":1,"Z":2}.get(axis_label, 0)
-        if idx >= len(self._axes): return
-        ax = self._axes[idx]
-        resp = self.query_raw(f"POS? {ax}")
-        cur = 0.0
-        if "=" in resp:
-            try: cur = float(resp.split("=")[1].strip())
-            except: pass
-        self.send_raw(f"MVR {ax} {delta}")
+        cur = self._parse_val(self.query_raw(f"?FPOS{idx}"))
+        self.send_raw(f"PTP {idx}, {cur + delta}")
 
     def vel_all(self, v):
-        for ax in self._axes:
-            self.send_raw(f"VEL {ax} {v}")
+        for idx in self.AXES:
+            self.send_raw(f"VEL({idx}) = {v}")
 
     def halt(self):
-        self.send_raw("HLT")
+        for idx in self.AXES:
+            self.send_raw(f"HALT {idx}")
 
     def home(self):
-        for ax in self._axes:
-            self.send_raw(f"MOV {ax} 0")
+        for idx in self.AXES:
+            self.send_raw(f"PTP {idx}, 0")
 
     def frf(self):
-        for ax in self._axes:
-            self.send_raw(f"FRF {ax}")
-
-    def wait_target(self, timeout=30):
-        deadline = time.time() + timeout
-        while time.time() < deadline:
-            resp = self.query_raw("ONT?")
-            vals = {}
-            for line in resp.strip().split("\n"):
-                if "=" in line:
-                    try:
-                        k, v = line.split("=", 1)
-                        vals[k.strip()] = int(v.strip())
-                    except: pass
-            if all(vals.get(a, 0) == 1 for a in self._axes):
-                return
-            time.sleep(0.05)
+        for idx in self.AXES:
+            self.send_raw(f"HOME {idx}")
 
 
 # ══════════════════════════════════════════════
