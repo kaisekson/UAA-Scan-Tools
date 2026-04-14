@@ -1,7 +1,7 @@
 """
 PI Linear Stage Panel — L-812 (Single Axis)
 =============================================
-- Connect via pipython (C-863 / C-865)
+- Connect via raw TCP socket (เหมือน Hercules)
 - Position readback
 - Jog: Step / Continuous + presets
 - Go to position
@@ -9,15 +9,9 @@ PI Linear Stage Panel — L-812 (Single Axis)
 - Response log
 """
 
-import os, json, datetime, time
-try:
-    from pipython import GCSDevice, pitools
-    HAS_PIPYTHON = True
-except ImportError:
-    HAS_PIPYTHON = False
-
+import os, json, datetime, time, socket
 from PyQt6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
+    QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QLineEdit, QPushButton, QFrame,
     QScrollArea, QTextEdit, QListWidget, QComboBox
 )
@@ -28,9 +22,9 @@ from core.widgets import lbl, divider
 CMD_FILE = "config/gcs_commands.json"
 
 STEP_PRESETS = [
-    ("0.1µm",  0.0001), ("1µm",   0.001),  ("5µm",   0.005),
-    ("10µm",   0.010),  ("50µm",  0.050),  ("100µm", 0.100),
-    ("500µm",  0.500),  ("1mm",   1.000),  ("5mm",   5.000),
+    ("0.1µm", 0.0001), ("1µm",  0.001), ("5µm",  0.005),
+    ("10µm",  0.010),  ("50µm", 0.050), ("100µm",0.100),
+    ("500µm", 0.500),  ("1mm",  1.000), ("5mm",  5.000),
 ]
 VEL_PRESETS = [
     ("Slow", 0.1), ("Med", 1.0), ("Fast", 5.0), ("Max", 10.0),
@@ -41,63 +35,120 @@ def load_commands():
     if os.path.exists(CMD_FILE):
         with open(CMD_FILE) as f:
             return json.load(f).get("commands", [])
-    return ["POS?", "FRF", "ONT?", "ERR?", "*IDN?", "HLT", "TMN?", "TMX?"]
+    return ["POS?","FRF","ONT?","ERR?","*IDN?","HLT","TMN?","TMX?","MVR"]
 
 
 # ══════════════════════════════════════════════
-# Driver
+# Driver — raw TCP socket
 # ══════════════════════════════════════════════
 
 class StageDriver:
+    BUFFER  = 4096
+    TIMEOUT = 5.0
+
     def __init__(self, ip, port=50000):
-        self.ip = ip; self.port = port; self._dev = None
+        self.ip    = ip
+        self.port  = port
+        self._sock = None
+        self._axis = "1"  # cache axis name
 
     def connect(self):
-        if not HAS_PIPYTHON:
-            raise RuntimeError("pipython not installed — pip install pipython")
-        self._dev = GCSDevice()
-        self._dev.ConnectTCPIP(ipaddress=self.ip, ipport=self.port)
+        self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self._sock.settimeout(self.TIMEOUT)
+        self._sock.connect((self.ip, self.port))
+        time.sleep(0.2)
+        # flush greeting
+        self._sock.settimeout(0.3)
+        try: self._sock.recv(self.BUFFER)
+        except: pass
+        self._sock.settimeout(self.TIMEOUT)
+        # get axis name
+        try:
+            resp = self.query_raw("SAI?")
+            axes = [a.strip() for a in resp.strip().split("\n") if a.strip()]
+            if axes: self._axis = axes[0]
+        except:
+            self._axis = "1"
 
     def disconnect(self):
-        if self._dev:
-            try: self._dev.CloseConnection()
+        if self._sock:
+            try: self._sock.close()
             except: pass
-            self._dev = None
+            self._sock = None
 
-    def idn(self):      return self._dev.qIDN().strip()
-    def pos(self):      return list(self._dev.qPOS().values())[0]
-    def ont(self):      return str(self._dev.qONT())
-    def err(self):      return str(self._dev.qERR())
-    def tmn(self):      return list(self._dev.qTMN().values())[0]
-    def tmx(self):      return list(self._dev.qTMX().values())[0]
+    def send_raw(self, cmd):
+        """ส่ง command + LF"""
+        self._sock.sendall((cmd.strip() + "\n").encode())
+        time.sleep(0.02)
+
+    def query_raw(self, cmd):
+        """ส่ง query + LF แล้วรับ response"""
+        self._sock.sendall((cmd.strip() + "\n").encode())
+        time.sleep(0.02)
+        self._sock.settimeout(0.5)
+        data = b""
+        try: data = self._sock.recv(self.BUFFER)
+        except: pass
+        self._sock.settimeout(self.TIMEOUT)
+        return data.decode().strip()
+
+    def idn(self):
+        return self.query_raw("*IDN?")
+
+    def pos(self):
+        resp = self.query_raw("POS?")
+        for line in resp.strip().split("\n"):
+            if "=" in line:
+                try: return float(line.split("=")[1].strip())
+                except: pass
+        return 0.0
+
+    def ont(self):  return self.query_raw("ONT?")
+    def err(self):  return self.query_raw("ERR?")
+
+    def tmn(self):
+        resp = self.query_raw("TMN?")
+        for line in resp.strip().split("\n"):
+            if "=" in line:
+                try: return float(line.split("=")[1].strip())
+                except: pass
+        return 0.0
+
+    def tmx(self):
+        resp = self.query_raw("TMX?")
+        for line in resp.strip().split("\n"):
+            if "=" in line:
+                try: return float(line.split("=")[1].strip())
+                except: pass
+        return 0.0
 
     def mov(self, pos):
-        axis = list(self._dev.axes)[0]
-        self._dev.MOV(axis, pos)
+        self.send_raw(f"MOV {self._axis} {pos}")
 
     def mov_relative(self, delta):
-        axis = list(self._dev.axes)[0]
-        cur  = list(self._dev.qPOS().values())[0]
-        self._dev.MOV(axis, cur + delta)
+        """MVR — move relative ไม่ต้อง query POS ก่อน"""
+        self.send_raw(f"MVR {self._axis} {delta}")
 
     def vel(self, v):
-        axis = list(self._dev.axes)[0]
-        self._dev.VEL(axis, v)
+        self.send_raw(f"VEL {self._axis} {v}")
 
-    def halt(self):     self._dev.HLT()
+    def halt(self):
+        self.send_raw("HLT")
+
     def frf(self):
-        axis = list(self._dev.axes)[0]
-        self._dev.FRF(axis)
-
-    def home(self):
-        axis = list(self._dev.axes)[0]
-        self._dev.MOV(axis, 0.0)
+        self.send_raw(f"FRF {self._axis}")
 
     def wait_target(self, timeout=15):
-        pitools.waitontarget(self._dev, timeout=timeout)
-
-    def send_raw(self, cmd):  return self._dev.Send(cmd)
-    def query_raw(self, cmd): return self._dev.qGCS(cmd)
+        deadline = time.time() + timeout
+        while time.time() < deadline:
+            resp = self.query_raw("ONT?")
+            for line in resp.strip().split("\n"):
+                if "=" in line:
+                    try:
+                        if int(line.split("=")[1].strip()) == 1:
+                            return
+                    except: pass
+            time.sleep(0.05)
 
 
 # ══════════════════════════════════════════════
@@ -105,16 +156,18 @@ class StageDriver:
 # ══════════════════════════════════════════════
 
 class ConnectWorker(QThread):
-    success = pyqtSignal(str)
+    success = pyqtSignal(str, object)
     failed  = pyqtSignal(str)
     def __init__(self, ip, port):
         super().__init__(); self.ip=ip; self.port=port
     def run(self):
         try:
             d = StageDriver(self.ip, self.port)
-            d.connect(); idn = d.idn(); d.disconnect()
-            self.success.emit(idn)
-        except Exception as e: self.failed.emit(str(e))
+            d.connect()
+            idn = d.idn()
+            self.success.emit(idn, d)
+        except Exception as e:
+            self.failed.emit(str(e))
 
 
 class MoveWorker(QThread):
@@ -123,15 +176,18 @@ class MoveWorker(QThread):
     def __init__(self, drv, delta=None, absolute=None, vel=1.0):
         super().__init__()
         self._drv = drv; self._delta = delta
-        self._abs = absolute; self._vel  = vel
+        self._abs = absolute; self._vel = vel
     def run(self):
         try:
             self._drv.vel(self._vel)
-            if self._abs is not None: self._drv.mov(self._abs)
-            else:                     self._drv.mov_relative(self._delta)
-            self._drv.wait_target(timeout=30)
+            if self._abs is not None:
+                self._drv.mov(self._abs)
+            else:
+                self._drv.mov_relative(self._delta)
+            # fire and forget — ไม่ wait_target
             self.finished.emit()
-        except Exception as e: self.error.emit(str(e))
+        except Exception as e:
+            self.error.emit(str(e))
 
 
 # ══════════════════════════════════════════════
@@ -173,39 +229,44 @@ class LinearStagePanel(QWidget):
         self._pos_timer.timeout.connect(self._refresh_pos)
         self._pos_timer.start(500)
 
-    # ── section header ────────────────────────
-    def _sh(self, layout, title, extra_widget=None):
+    def _sh(self, layout, title, extra=None):
         row = QHBoxLayout(); row.setSpacing(8)
         row.addWidget(lbl(title,"#4a5568",10,True))
         line = QFrame(); line.setFrameShape(QFrame.Shape.HLine)
         line.setStyleSheet("background:#1e2433;max-height:1px;")
         row.addWidget(line,1)
-        if extra_widget: row.addWidget(extra_widget)
+        if extra: row.addWidget(extra)
         layout.addLayout(row)
 
     def _log_msg(self, msg, color="#22c55e"):
         ts = datetime.datetime.now().strftime("%H:%M:%S")
         self._log.append(
             f'<span style="color:{color};">[{ts}]</span> '
-            f'<span style="color:#8892a4;">{msg}</span>'
-        )
+            f'<span style="color:#8892a4;">{msg}</span>')
+
+    def _vline(self):
+        f = QFrame(); f.setFrameShape(QFrame.Shape.VLine)
+        f.setStyleSheet("color:#1e2433;"); f.setFixedWidth(1); return f
 
     # ── Connection ────────────────────────────
     def _build_connection(self, layout):
         self._sh(layout,"CONNECTION")
         card = QFrame()
-        card.setStyleSheet("QFrame{background:#0d0f14;border:1px solid #1e2433;border-radius:6px;}")
+        card.setStyleSheet(
+            "QFrame{background:#0d0f14;border:1px solid #1e2433;border-radius:6px;}")
         v = QVBoxLayout(card); v.setContentsMargins(12,10,12,10); v.setSpacing(8)
 
         row = QHBoxLayout(); row.setSpacing(10)
-        for attr, label, default, color in [
-            ("ip_edit",   "IP Address", "192.168.1.10", "#4a9eff"),
-            ("port_edit", "Port",       "50000",        "#4a9eff"),
+        for attr, label, default in [
+            ("ip_edit",   "IP Address", "192.168.1.10"),
+            ("port_edit", "Port",       "50000"),
         ]:
-            f = QFrame(); fv = QVBoxLayout(f); fv.setContentsMargins(0,0,0,0); fv.setSpacing(3)
+            f = QFrame(); fv = QVBoxLayout(f)
+            fv.setContentsMargins(0,0,0,0); fv.setSpacing(3)
             fv.addWidget(lbl(label,"#4a5568",10))
             e = QLineEdit(default)
-            e.setStyleSheet(f"border-left:2px solid {color};background:#161b22;"
+            e.setStyleSheet(
+                "border-left:2px solid #4a9eff;background:#161b22;"
                 "border-top:1px solid #1e2433;border-right:1px solid #1e2433;"
                 "border-bottom:1px solid #1e2433;border-radius:4px;"
                 "color:#c5cdd9;padding:5px 8px;font-size:12px;")
@@ -219,8 +280,7 @@ class LinearStagePanel(QWidget):
         self.conn_btn.setStyleSheet(
             "QPushButton{background:#0d1520;border:1px solid #4a9eff;"
             "border-radius:5px;color:#4a9eff;font-size:12px;font-weight:600;padding:0 14px;}"
-            "QPushButton:hover{background:#4a9eff;color:#000;}"
-            "QPushButton:disabled{border-color:#1e2433;color:#2a3444;background:#0a0c10;}")
+            "QPushButton:hover{background:#4a9eff;color:#000;}")
         self.conn_btn.clicked.connect(self._connect)
         self.status_lbl = lbl("○  Disconnected","#4a5568",12)
         self.idn_lbl    = lbl("IDN: —","#2a3444",11)
@@ -245,13 +305,14 @@ class LinearStagePanel(QWidget):
         pos_card = QFrame()
         pos_card.setStyleSheet(
             "QFrame{background:#0a0c10;border:1px solid #1e2433;border-radius:6px;}")
-        ph = QHBoxLayout(pos_card); ph.setContentsMargins(16,10,16,10); ph.setSpacing(16)
+        ph = QHBoxLayout(pos_card)
+        ph.setContentsMargins(16,10,16,10); ph.setSpacing(16)
 
         left = QVBoxLayout(); left.setSpacing(2)
         left.addWidget(lbl("CURRENT POSITION","#4a5568",9,True))
         val_row = QHBoxLayout(); val_row.setSpacing(8)
         self._pos_val = QLabel("0.0000")
-        self._pos_val.setFont(QFont("Consolas",26,700))
+        self._pos_val.setFont(QFont("Consolas",28,700))
         self._pos_val.setStyleSheet("color:#4a9eff;background:transparent;")
         val_row.addWidget(self._pos_val)
         val_row.addWidget(lbl("mm","#2a3444",13))
@@ -259,7 +320,9 @@ class LinearStagePanel(QWidget):
         left.addLayout(val_row)
         ph.addLayout(left,1)
 
-        right = QVBoxLayout(); right.setSpacing(4); right.setAlignment(Qt.AlignmentFlag.AlignRight)
+        right = QVBoxLayout()
+        right.setSpacing(4)
+        right.setAlignment(Qt.AlignmentFlag.AlignRight)
         right.addWidget(lbl("Travel limits","#4a5568",9))
         self._lim_lbl = lbl("MIN: —   MAX: —","#8892a4",11)
         self._lim_lbl.setFont(QFont("Consolas",11))
@@ -273,9 +336,9 @@ class LinearStagePanel(QWidget):
         jog_card = QFrame()
         jog_card.setStyleSheet(
             "QFrame{background:#0a0c10;border:1px solid #1e2433;border-radius:6px;}")
-        jv = QVBoxLayout(jog_card); jv.setContentsMargins(12,10,12,10); jv.setSpacing(8)
+        jv = QVBoxLayout(jog_card)
+        jv.setContentsMargins(12,10,12,10); jv.setSpacing(8)
 
-        # Jog buttons + settings
         top = QHBoxLayout(); top.setSpacing(10)
 
         def jbtn(text, big=False):
@@ -292,16 +355,13 @@ class LinearStagePanel(QWidget):
         self._btn_l  = jbtn("◀")
         self._btn_r  = jbtn("▶")
         self._btn_rr = jbtn("▶▶", True)
-
         self._btn_ll.clicked.connect(lambda: self._jog(-10))
         self._btn_l.clicked.connect( lambda: self._jog(-1))
         self._btn_r.clicked.connect( lambda: self._jog( 1))
         self._btn_rr.clicked.connect(lambda: self._jog(10))
 
-        top.addWidget(self._btn_ll)
-        top.addWidget(self._btn_l)
+        top.addWidget(self._btn_ll); top.addWidget(self._btn_l)
 
-        # Settings
         mid = QVBoxLayout(); mid.setSpacing(6)
 
         # Step
@@ -351,26 +411,8 @@ class LinearStagePanel(QWidget):
         vr.addStretch()
         mid.addLayout(vr)
 
-        # Mode
-        mr = QHBoxLayout(); mr.setSpacing(6)
-        mr.addWidget(lbl("Mode","#4a5568",10))
-        self._mode_step = QPushButton("Step")
-        self._mode_cont = QPushButton("Continuous")
-        self._MODE_ON  = ("QPushButton{background:#0d1520;border:1px solid #22c55e;"
-                          "border-radius:4px;color:#22c55e;font-size:11px;font-weight:600;padding:0 10px;}")
-        self._MODE_OFF = ("QPushButton{background:#161b22;border:1px solid #1e2433;"
-                          "border-radius:4px;color:#4a5568;font-size:11px;padding:0 10px;}")
-        for b in [self._mode_step, self._mode_cont]:
-            b.setFixedHeight(26); b.setStyleSheet(self._MODE_OFF)
-        self._mode_step.setStyleSheet(self._MODE_ON)
-        self._mode_step.clicked.connect(lambda: self._set_mode("Step"))
-        self._mode_cont.clicked.connect(lambda: self._set_mode("Continuous"))
-        mr.addWidget(self._mode_step); mr.addWidget(self._mode_cont); mr.addStretch()
-        mid.addLayout(mr)
-
         top.addLayout(mid, 1)
-        top.addWidget(self._btn_r)
-        top.addWidget(self._btn_rr)
+        top.addWidget(self._btn_r); top.addWidget(self._btn_rr)
         jv.addLayout(top)
         jv.addWidget(divider())
 
@@ -383,8 +425,7 @@ class LinearStagePanel(QWidget):
             "color:#c5cdd9;padding:5px 8px;font-size:12px;font-family:monospace;")
         bot.addWidget(self._goto_edit)
         bot.addWidget(lbl("mm","#4a5568",9))
-        go_btn = QPushButton("Go")
-        go_btn.setFixedHeight(30)
+        go_btn = QPushButton("Go"); go_btn.setFixedHeight(30)
         go_btn.setStyleSheet(
             "QPushButton{background:#1a3a1a;border:1px solid #22c55e;"
             "border-radius:4px;color:#22c55e;font-size:12px;font-weight:600;padding:0 14px;}"
@@ -394,11 +435,11 @@ class LinearStagePanel(QWidget):
         bot.addWidget(self._vline())
 
         for label, fn, color in [
-            ("Home",      self._home,  "#4a9eff"),
-            ("Reference", self._frf,   "#4a9eff"),
-            ("ONT?",      self._ont,   "#4a9eff"),
-            ("ERR?",      self._err,   "#4a9eff"),
-            ("HALT",      self._halt,  "#ef4444"),
+            ("POS?",      self._pos_cmd, "#4a9eff"),
+            ("Reference", self._frf,     "#4a9eff"),
+            ("ONT?",      self._ont,     "#4a9eff"),
+            ("ERR?",      self._err,     "#4a9eff"),
+            ("HALT",      self._halt,    "#ef4444"),
         ]:
             b = QPushButton(label); b.setFixedHeight(30)
             is_halt = label == "HALT"
@@ -406,16 +447,11 @@ class LinearStagePanel(QWidget):
                 f"QPushButton{{background:{'#1a0000' if is_halt else '#161b22'};"
                 f"border:1px solid {'#3d0a0a' if is_halt else '#1e2433'};"
                 f"border-radius:4px;color:#4a5568;font-size:11px;padding:0 10px;}}"
-                f"QPushButton:hover{{border-color:{color};color:{color};"
-                f"{'background:#3d0a0a;' if is_halt else ''}}}")
+                f"QPushButton:hover{{border-color:{color};color:{color};}}")
             b.clicked.connect(fn); bot.addWidget(b)
         bot.addStretch()
         jv.addLayout(bot)
         layout.addWidget(jog_card)
-
-    def _vline(self):
-        f = QFrame(); f.setFrameShape(QFrame.Shape.VLine)
-        f.setStyleSheet("color:#1e2433;"); f.setFixedWidth(1); return f
 
     # ── Console ───────────────────────────────
     def _build_console(self, layout):
@@ -437,8 +473,7 @@ class LinearStagePanel(QWidget):
         row.addWidget(self._cmd_edit,1); row.addWidget(send_btn)
         layout.addLayout(row)
 
-        self._ac = QListWidget()
-        self._ac.setFixedHeight(64)
+        self._ac = QListWidget(); self._ac.setFixedHeight(64)
         self._ac.setStyleSheet(
             "QListWidget{background:#0a0c10;border:1px solid #1e2433;border-radius:4px;"
             "color:#8892a4;font-size:11px;font-family:Consolas,monospace;}"
@@ -451,8 +486,7 @@ class LinearStagePanel(QWidget):
     # ── Log ───────────────────────────────────
     def _build_log(self, layout):
         self._sh(layout,"RESPONSE LOG")
-        self._log = QTextEdit()
-        self._log.setReadOnly(True)
+        self._log = QTextEdit(); self._log.setReadOnly(True)
         self._log.setFixedHeight(80)
         self._log.setStyleSheet(
             "QTextEdit{background:#0a0c10;border:1px solid #1e2433;border-radius:5px;"
@@ -474,19 +508,12 @@ class LinearStagePanel(QWidget):
         self._worker.failed.connect(self._on_fail)
         self._worker.start()
 
-    def _on_ok(self, idn):
-        ip   = self.ip_edit.text().strip()
-        port = int(self.port_edit.text() or 50000)
-        drv  = StageDriver(ip, port)
+    def _on_ok(self, idn, drv):
+        self._drv = drv
         try:
-            drv.connect(); self._drv = drv
-            # อ่าน travel limits
-            try:
-                mn = drv.tmn(); mx = drv.tmx()
-                self._lim_lbl.setText(f"MIN: {mn:.3f}   MAX: {mx:.3f} mm")
-            except: pass
-        except Exception as e:
-            self._log_msg(str(e),"#ef4444"); return
+            mn = drv.tmn(); mx = drv.tmx()
+            self._lim_lbl.setText(f"MIN: {mn:.3f}   MAX: {mx:.3f} mm")
+        except: pass
         self.status_lbl.setText("●  Connected")
         self.status_lbl.setStyleSheet("color:#22c55e;font-size:12px;font-weight:600;")
         self.idn_lbl.setText(f"IDN: {idn}")
@@ -535,16 +562,11 @@ class LinearStagePanel(QWidget):
         self._vel = val
         self._vel_edit.setText(f"{val:.3f}")
 
-    def _set_mode(self, mode):
-        self._jog_mode = mode
-        self._mode_step.setStyleSheet(self._MODE_ON  if mode=="Step" else self._MODE_OFF)
-        self._mode_cont.setStyleSheet(self._MODE_ON  if mode=="Continuous" else self._MODE_OFF)
-
     def _jog(self, multiplier):
         if not self._drv:
             self._log_msg("Not connected","#ef4444"); return
         delta = multiplier * self._step
-        self._log_msg(f"JOG {'+' if delta>0 else ''}{delta:.4f} mm")
+        self._log_msg(f"MVR {'+' if delta>0 else ''}{delta:.4f} mm")
         worker = MoveWorker(self._drv, delta=delta, vel=self._vel)
         worker.finished.connect(self._refresh_pos)
         worker.error.connect(lambda e: self._log_msg(e,"#ef4444"))
@@ -566,17 +588,19 @@ class LinearStagePanel(QWidget):
         self._move_worker = worker
 
     # ── Quick commands ────────────────────────
-    def _home(self):
+    def _pos_cmd(self):
         if not self._drv: return
-        self._log_msg("Home → 0.000 mm")
-        worker = MoveWorker(self._drv, absolute=0.0, vel=self._vel)
-        worker.finished.connect(self._refresh_pos)
-        worker.error.connect(lambda e: self._log_msg(e,"#ef4444"))
-        worker.start(); self._move_worker = worker
+        try:
+            pos = self._drv.pos()
+            self._log_msg(f"POS? → {pos:.4f} mm")
+            self._pos_val.setText(f"{pos:.4f}")
+        except Exception as e: self._log_msg(str(e),"#ef4444")
 
     def _frf(self):
         if not self._drv: return
-        try: self._drv.frf(); self._log_msg("FRF — Referencing...")
+        try:
+            self._drv.frf()
+            self._log_msg("FRF — Referencing... (PI will move!)")
         except Exception as e: self._log_msg(str(e),"#ef4444")
 
     def _ont(self):
@@ -633,3 +657,6 @@ class LinearStagePanel(QWidget):
         self._step_edit.setText(f"{self._step:.4f}")
         self._vel  = data.get("velocity",1.0)
         self._vel_edit.setText(f"{self._vel:.3f}")
+
+    def set_driver(self, drv):
+        self._drv = drv
