@@ -77,14 +77,14 @@ class StageDriver:
             self._sock = None
 
     def send_raw(self, cmd):
-        """ส่ง command + LF"""
-        self._sock.sendall((cmd.strip() + "\n").encode())
+        """ส่ง command + CR+LF (ACS SPiiPlus)"""
+        self._sock.sendall((cmd.strip() + "\r\n").encode())
         time.sleep(0.02)
 
     def query_raw(self, cmd):
-        """ส่ง query + LF แล้วรับ response"""
-        self._sock.sendall((cmd.strip() + "\n").encode())
-        time.sleep(0.02)
+        """ส่ง query + CR+LF แล้วรับ response"""
+        self._sock.sendall((cmd.strip() + "\r\n").encode())
+        time.sleep(0.05)
         self._sock.settimeout(0.5)
         data = b""
         try: data = self._sock.recv(self.BUFFER)
@@ -93,7 +93,7 @@ class StageDriver:
         return data.decode().strip()
 
     def idn(self):
-        return self.query_raw("*IDN?")
+        return self.query_raw("*IDN")
 
     def pos(self):
         resp = self.query_raw("POS?")
@@ -631,7 +631,7 @@ class LinearStagePanel(QWidget):
         if not cmd: return
         if not self._drv: self._log_msg("Not connected","#ef4444"); return
         try:
-            if cmd.strip().endswith("?"):
+            if cmd.strip().endswith("?") or cmd.strip().startswith("*") or cmd.strip().startswith("?"):
                 resp = self._drv.query_raw(cmd)
                 self._log_msg(f"{cmd} → {resp}")
             else:
