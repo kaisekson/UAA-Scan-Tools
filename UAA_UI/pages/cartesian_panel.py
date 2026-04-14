@@ -1,7 +1,7 @@
 """
 PI Cartesian XYZ Panel — Motion Only
 ======================================
-- Connect via pipython (C-884 / C-885)
+- Connect via raw TCP socket (เหมือน Hercules)
 - Position readback X Y Z
 - Jog: D-pad XY + Z up/down, Step/Continuous
 - Go to XYZ position
@@ -9,13 +9,7 @@ PI Cartesian XYZ Panel — Motion Only
 - Response log
 """
 
-import os, json, datetime
-try:
-    from pipython import GCSDevice, pitools
-    HAS_PIPYTHON = True
-except ImportError:
-    HAS_PIPYTHON = False
-
+import os, json, datetime, time, socket
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
     QLabel, QLineEdit, QPushButton, QFrame,
@@ -45,73 +39,120 @@ def load_commands():
 
 
 # ══════════════════════════════════════════════
-# Driver
+# Driver — raw TCP socket
 # ══════════════════════════════════════════════
 
 class CartesianDriver:
+    BUFFER  = 4096
+    TIMEOUT = 5.0
+
     def __init__(self, ip, port=50000):
-        self.ip = ip; self.port = port; self._dev = None
+        self.ip    = ip
+        self.port  = port
+        self._sock = None
+        self._axes = ["1","2","3"]  # cache axis names
 
     def connect(self):
-        if not HAS_PIPYTHON:
-            raise RuntimeError("pipython not installed — pip install pipython")
-        self._dev = GCSDevice()
-        self._dev.ConnectTCPIP(ipaddress=self.ip, ipport=self.port)
+        self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self._sock.settimeout(self.TIMEOUT)
+        self._sock.connect((self.ip, self.port))
+        time.sleep(0.2)
+        self._sock.settimeout(0.3)
+        try: self._sock.recv(self.BUFFER)
+        except: pass
+        self._sock.settimeout(self.TIMEOUT)
+        # get axis names
+        try:
+            resp = self.query_raw("SAI?")
+            axes = [a.strip() for a in resp.strip().split("\n") if a.strip()]
+            if axes: self._axes = axes[:3]
+        except:
+            self._axes = ["1","2","3"]
 
     def disconnect(self):
-        if self._dev:
-            try: self._dev.CloseConnection()
+        if self._sock:
+            try: self._sock.close()
             except: pass
-            self._dev = None
+            self._sock = None
+
+    def send_raw(self, cmd):
+        self._sock.sendall((cmd.strip() + "\n").encode())
+        time.sleep(0.02)
+
+    def query_raw(self, cmd):
+        self._sock.sendall((cmd.strip() + "\n").encode())
+        time.sleep(0.02)
+        self._sock.settimeout(0.5)
+        data = b""
+        try: data = self._sock.recv(self.BUFFER)
+        except: pass
+        self._sock.settimeout(self.TIMEOUT)
+        return data.decode().strip()
 
     def idn(self):
-        return self._dev.qIDN().strip()
+        return self.query_raw("*IDN?")
 
     def pos(self):
-        """คืน dict {axis: value} สำหรับ 3 axes"""
-        p = self._dev.qPOS()
-        axes = sorted(p.keys())
+        """คืน dict {X: val, Y: val, Z: val}"""
+        resp = self.query_raw("POS?")
+        result = {}
         labels = ["X","Y","Z"]
-        return {labels[i]: p[axes[i]] for i in range(min(3,len(axes)))}
+        for i, line in enumerate(resp.strip().split("\n")):
+            if "=" in line and i < 3:
+                try:
+                    result[labels[i]] = float(line.split("=")[1].strip())
+                except: pass
+        return result
 
-    def ont(self):   return str(self._dev.qONT())
-    def err(self):   return str(self._dev.qERR())
+    def ont(self):  return self.query_raw("ONT?")
+    def err(self):  return self.query_raw("ERR?")
 
     def mov_xyz(self, x=None, y=None, z=None):
-        axes  = sorted(self._dev.axes)
-        label = {"X":0,"Y":1,"Z":2}
-        cmd   = {}
-        if x is not None and len(axes) > label["X"]: cmd[axes[label["X"]]] = x
-        if y is not None and len(axes) > label["Y"]: cmd[axes[label["Y"]]] = y
-        if z is not None and len(axes) > label["Z"]: cmd[axes[label["Z"]]] = z
-        if cmd: self._dev.MOV(cmd)
+        vals = [(x,0),(y,1),(z,2)]
+        for val, idx in vals:
+            if val is not None and idx < len(self._axes):
+                self.send_raw(f"MOV {self._axes[idx]} {val}")
 
     def mov_relative(self, axis_label, delta):
-        axes   = sorted(self._dev.axes)
-        label  = {"X":0,"Y":1,"Z":2}
-        idx    = label.get(axis_label, 0)
-        if idx >= len(axes): return
-        cur    = self._dev.qPOS(axes[idx])[axes[idx]]
-        self._dev.MOV(axes[idx], cur + delta)
+        idx = {"X":0,"Y":1,"Z":2}.get(axis_label, 0)
+        if idx >= len(self._axes): return
+        ax = self._axes[idx]
+        resp = self.query_raw(f"POS? {ax}")
+        cur = 0.0
+        if "=" in resp:
+            try: cur = float(resp.split("=")[1].strip())
+            except: pass
+        self.send_raw(f"MVR {ax} {delta}")
 
     def vel_all(self, v):
-        axes = list(self._dev.axes)
-        self._dev.VEL({a: v for a in axes})
+        for ax in self._axes:
+            self.send_raw(f"VEL {ax} {v}")
 
-    def halt(self):  self._dev.HLT()
+    def halt(self):
+        self.send_raw("HLT")
+
     def home(self):
-        axes = list(self._dev.axes)
-        self._dev.MOV({a: 0.0 for a in axes})
+        for ax in self._axes:
+            self.send_raw(f"MOV {ax} 0")
 
     def frf(self):
-        axes = list(self._dev.axes)
-        self._dev.FRF(axes)
+        for ax in self._axes:
+            self.send_raw(f"FRF {ax}")
 
     def wait_target(self, timeout=30):
-        pitools.waitontarget(self._dev, timeout=timeout)
-
-    def send_raw(self, cmd):  return self._dev.Send(cmd)
-    def query_raw(self, cmd): return self._dev.qGCS(cmd)
+        deadline = time.time() + timeout
+        while time.time() < deadline:
+            resp = self.query_raw("ONT?")
+            vals = {}
+            for line in resp.strip().split("\n"):
+                if "=" in line:
+                    try:
+                        k, v = line.split("=", 1)
+                        vals[k.strip()] = int(v.strip())
+                    except: pass
+            if all(vals.get(a, 0) == 1 for a in self._axes):
+                return
+            time.sleep(0.05)
 
 
 # ══════════════════════════════════════════════
@@ -119,16 +160,18 @@ class CartesianDriver:
 # ══════════════════════════════════════════════
 
 class ConnectWorker(QThread):
-    success = pyqtSignal(str)
+    success = pyqtSignal(str, object)
     failed  = pyqtSignal(str)
     def __init__(self, ip, port):
         super().__init__(); self.ip=ip; self.port=port
     def run(self):
         try:
             d = CartesianDriver(self.ip, self.port)
-            d.connect(); idn = d.idn(); d.disconnect()
-            self.success.emit(idn)
-        except Exception as e: self.failed.emit(str(e))
+            d.connect()
+            idn = d.idn()
+            self.success.emit(idn, d)
+        except Exception as e:
+            self.failed.emit(str(e))
 
 
 class MoveWorker(QThread):
@@ -141,9 +184,10 @@ class MoveWorker(QThread):
         try:
             self._drv.vel_all(self._vel)
             self._fn()
-            self._drv.wait_target(timeout=30)
+            # fire and forget — ไม่ wait_target
             self.finished.emit()
-        except Exception as e: self.error.emit(str(e))
+        except Exception as e:
+            self.error.emit(str(e))
 
 
 # ══════════════════════════════════════════════
@@ -230,7 +274,6 @@ class CartesianPanel(QWidget):
         self._pos_timer.timeout.connect(self._refresh_pos)
         self._pos_timer.start(500)
 
-    # ── helpers ───────────────────────────────
     def _sh(self, layout, title, extra=None):
         row = QHBoxLayout(); row.setSpacing(8)
         row.addWidget(lbl(title,"#4a5568",10,True))
@@ -460,10 +503,11 @@ class CartesianPanel(QWidget):
         # Quick commands
         cmd_row = QHBoxLayout(); cmd_row.setSpacing(6)
         for label, fn, color in [
-            ("Home",      self._home, "#4a9eff"),
-            ("FRF",       self._frf,  "#4a9eff"),
-            ("ONT?",      self._ont,  "#4a9eff"),
-            ("ERR?",      self._err,  "#4a9eff"),
+            ("POS?",  self._pos_cmd, "#4a9eff"),
+            ("Home",  self._home,    "#4a9eff"),
+            ("FRF",   self._frf,     "#4a9eff"),
+            ("ONT?",  self._ont,     "#4a9eff"),
+            ("ERR?",  self._err,     "#4a9eff"),
         ]:
             b = QPushButton(label); b.setFixedHeight(28)
             b.setStyleSheet(
@@ -536,13 +580,8 @@ class CartesianPanel(QWidget):
         self._worker.failed.connect(self._on_fail)
         self._worker.start()
 
-    def _on_ok(self, idn):
-        ip   = self.ip_edit.text().strip()
-        port = int(self.port_edit.text() or 50000)
-        drv  = CartesianDriver(ip, port)
-        try: drv.connect(); self._drv = drv
-        except Exception as e:
-            self._log_msg(str(e),"#ef4444"); return
+    def _on_ok(self, idn, drv):
+        self._drv = drv
         self.status_lbl.setText("●  Connected")
         self.status_lbl.setStyleSheet("color:#22c55e;font-size:12px;font-weight:600;")
         self.idn_lbl.setText(f"IDN: {idn}")
@@ -627,6 +666,15 @@ class CartesianPanel(QWidget):
         worker.start(); self._goto_worker = worker
 
     # ── Quick commands ────────────────────────
+    def _pos_cmd(self):
+        if not self._drv: return
+        try:
+            pos = self._drv.pos()
+            msg = "  ".join([f"{k}={v:.4f}" for k,v in pos.items()])
+            self._log_msg(f"POS? → {msg}")
+            self._refresh_pos()
+        except Exception as e: self._log_msg(str(e),"#ef4444")
+
     def _home(self):
         if not self._drv: return
         self._log_msg("Home → X=0 Y=0 Z=0")
@@ -669,7 +717,7 @@ class CartesianPanel(QWidget):
         if not self._drv:
             self._log_msg("Not connected","#ef4444"); return
         try:
-            if cmd.strip().endswith("?"):
+            if cmd.strip().endswith("?") or cmd.strip().startswith("*"):
                 resp = self._drv.query_raw(cmd)
                 self._log_msg(f"{cmd} → {resp}")
             else:
@@ -695,3 +743,6 @@ class CartesianPanel(QWidget):
         self._step_edit.setText(f"{self._step:.4f}")
         self._vel  = data.get("velocity",1.0)
         self._vel_edit.setText(f"{self._vel:.3f}")
+
+    def set_cart_driver(self, drv):
+        self._drv = drv
