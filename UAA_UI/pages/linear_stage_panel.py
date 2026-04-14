@@ -62,13 +62,8 @@ class StageDriver:
         try: self._sock.recv(self.BUFFER)
         except: pass
         self._sock.settimeout(self.TIMEOUT)
-        # get axis name
-        try:
-            resp = self.query_raw("SAI?")
-            axes = [a.strip() for a in resp.strip().split("\n") if a.strip()]
-            if axes: self._axis = axes[0]
-        except:
-            self._axis = "1"
+        # ACS SPiiPlus ใช้ axis index number (0, 1, 2...)
+        self._axis = "0"
 
     def disconnect(self):
         if self._sock:
@@ -77,13 +72,13 @@ class StageDriver:
             self._sock = None
 
     def send_raw(self, cmd):
-        """ส่ง command + CR+LF (ACS SPiiPlus)"""
-        self._sock.sendall((cmd.strip() + "\r\n").encode())
+        """ส่ง command + CR (ACS SPiiPlus)"""
+        self._sock.sendall((cmd.strip() + "\r").encode())
         time.sleep(0.02)
 
     def query_raw(self, cmd):
-        """ส่ง query + CR+LF แล้วรับ response"""
-        self._sock.sendall((cmd.strip() + "\r\n").encode())
+        """ส่ง query + CR แล้วรับ response"""
+        self._sock.sendall((cmd.strip() + "\r").encode())
         time.sleep(0.05)
         self._sock.settimeout(0.5)
         data = b""
@@ -93,61 +88,69 @@ class StageDriver:
         return data.decode().strip()
 
     def idn(self):
-        return self.query_raw("*IDN")
+        return self.query_raw("?VR")
 
     def pos(self):
-        resp = self.query_raw("POS?")
-        for line in resp.strip().split("\n"):
-            if "=" in line:
-                try: return float(line.split("=")[1].strip())
-                except: pass
+        resp = self.query_raw("?FPOS0")
+        # response format: "?FPOS0    186.01 ::"
+        parts = resp.replace("::", "").split()
+        for p in parts:
+            try: return float(p)
+            except: pass
         return 0.0
 
     def ont(self):  return self.query_raw("ONT?")
     def err(self):  return self.query_raw("ERR?")
 
     def tmn(self):
-        resp = self.query_raw("TMN?")
-        for line in resp.strip().split("\n"):
-            if "=" in line:
-                try: return float(line.split("=")[1].strip())
-                except: pass
+        resp = self.query_raw(f"?SLLIMIT({self._axis})")
+        parts = resp.replace("::", "").split()
+        for p in parts:
+            try: return float(p)
+            except: pass
         return 0.0
 
     def tmx(self):
-        resp = self.query_raw("TMX?")
-        for line in resp.strip().split("\n"):
-            if "=" in line:
-                try: return float(line.split("=")[1].strip())
-                except: pass
+        resp = self.query_raw(f"?SRLIMIT({self._axis})")
+        parts = resp.replace("::", "").split()
+        for p in parts:
+            try: return float(p)
+            except: pass
         return 0.0
 
     def mov(self, pos):
-        self.send_raw(f"MOV {self._axis} {pos}")
+        """PTP absolute move"""
+        self.send_raw(f"PTP {self._axis}, {pos}")
 
     def mov_relative(self, delta):
-        """MVR — move relative ไม่ต้อง query POS ก่อน"""
-        self.send_raw(f"MVR {self._axis} {delta}")
+        """PTP relative move — query pos ก่อนแล้วบวก delta"""
+        cur = self.pos()
+        self.send_raw(f"PTP {self._axis}, {cur + delta}")
 
     def vel(self, v):
-        self.send_raw(f"VEL {self._axis} {v}")
+        """Set velocity VEL(axis) = v"""
+        self.send_raw(f"VEL({self._axis}) = {v}")
 
     def halt(self):
-        self.send_raw("HLT")
+        self.send_raw("HALT 0")
 
     def frf(self):
-        self.send_raw(f"FRF {self._axis}")
+        """Reference — ACS ใช้ HOM หรือ SET"""
+        self.send_raw(f"HOME {self._axis}")
 
     def wait_target(self, timeout=15):
+        """Poll MST ดู bit MOVE ครับ"""
         deadline = time.time() + timeout
         while time.time() < deadline:
-            resp = self.query_raw("ONT?")
-            for line in resp.strip().split("\n"):
-                if "=" in line:
-                    try:
-                        if int(line.split("=")[1].strip()) == 1:
-                            return
-                    except: pass
+            resp = self.query_raw(f"?MST({self._axis})")
+            parts = resp.replace("::", "").split()
+            for p in parts:
+                try:
+                    mst = int(p)
+                    # bit 0 = MOVE, ถ้า 0 = หยุดแล้ว
+                    if not (mst & 1):
+                        return
+                except: pass
             time.sleep(0.05)
 
 
