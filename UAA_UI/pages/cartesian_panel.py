@@ -1,12 +1,11 @@
 """
-PI Cartesian XYZ Panel — Motion Only
-======================================
-- Connect via raw TCP socket (เหมือน Hercules)
-- Position readback X Y Z
-- Jog: D-pad XY + Z up/down, Step/Continuous
-- Go to XYZ position
-- Command console + autocomplete
-- Response log
+Cartesian XYZ Panel
+====================
+- Connect via raw TCP socket (ACS SPiiPlus)
+- ใช้หลักการเดียวกับ linear_stage_panel.py
+- ต่างกันที่มี 3 axis: X=0, Y=1, Z=2
+- command + \r (CR only)
+- query response format: ?VARNAME    value ::
 """
 
 import os, json, datetime, time, socket
@@ -22,31 +21,34 @@ from core.widgets import lbl, divider
 CMD_FILE = "config/gcs_commands.json"
 
 STEP_PRESETS = [
-    ("0.1µm", 0.0001), ("1µm",  0.001),  ("5µm",   0.005),
-    ("10µm",  0.010),  ("50µm", 0.050),  ("100µm", 0.100),
-    ("500µm", 0.500),  ("1mm",  1.000),  ("5mm",   5.000),
+    ("0.1µm", 0.0001), ("1µm",  0.001), ("5µm",  0.005),
+    ("10µm",  0.010),  ("50µm", 0.050), ("100µm",0.100),
+    ("500µm", 0.500),  ("1mm",  1.000), ("5mm",  5.000),
 ]
 VEL_PRESETS = [
     ("Slow", 0.1), ("Med", 1.0), ("Fast", 5.0), ("Max", 10.0),
 ]
+
+# X=axis0, Y=axis1, Z=axis2
+AXIS_IDX = {"X": 0, "Y": 1, "Z": 2}
 
 
 def load_commands():
     if os.path.exists(CMD_FILE):
         with open(CMD_FILE) as f:
             return json.load(f).get("commands", [])
-    return ["POS?", "FRF", "ONT?", "ERR?", "*IDN?", "HLT", "TMN?", "TMX?"]
+    return ["?VR","?FPOS0","?FPOS1","?FPOS2","PTP","VEL","KILL","HALT","ENABLE"]
 
 
 # ══════════════════════════════════════════════
-# Driver — raw TCP socket
+# Driver — raw TCP socket (ACS SPiiPlus)
+# เหมือน linear_stage_panel.py ทุกอย่าง
+# ต่างกันแค่มี 3 axis
 # ══════════════════════════════════════════════
 
 class CartesianDriver:
-    """PI Cartesian driver — raw TCP socket + ACS SPiiPlus protocol (เหมือน linear)"""
     BUFFER  = 4096
     TIMEOUT = 5.0
-    AXES    = [0, 1, 2]   # axis index 0=X, 1=Y, 2=Z
 
     def __init__(self, ip, port=701):
         self.ip    = ip
@@ -70,7 +72,7 @@ class CartesianDriver:
             self._sock = None
 
     def send_raw(self, cmd):
-        """ส่ง command + CR (ACS SPiiPlus)"""
+        """ส่ง command + CR"""
         self._sock.sendall((cmd.strip() + "\r").encode())
         time.sleep(0.02)
 
@@ -86,7 +88,7 @@ class CartesianDriver:
         return data.decode().strip()
 
     def _parse_val(self, resp):
-        """parse response format: ?VARNAME    value ::"""
+        """parse response: ?FPOS0    186.01 :: → 186.01"""
         parts = resp.replace("::", "").split()
         for p in parts:
             try: return float(p)
@@ -99,44 +101,60 @@ class CartesianDriver:
     def pos(self):
         """คืน dict {X: val, Y: val, Z: val}"""
         result = {}
-        for label, idx in [("X",0),("Y",1),("Z",2)]:
-            try:
-                resp = self.query_raw(f"?FPOS{idx}")
-                result[label] = self._parse_val(resp)
-            except: result[label] = 0.0
+        for label, idx in AXIS_IDX.items():
+            resp = self.query_raw(f"?FPOS{idx}")
+            result[label] = self._parse_val(resp)
         return result
 
-    def ont(self):
-        return self.query_raw("?MST(0)")
+    def pos_axis(self, axis_label):
+        idx = AXIS_IDX[axis_label]
+        return self._parse_val(self.query_raw(f"?FPOS{idx}"))
 
     def err(self):
         return self.query_raw("??")
 
-    def mov_xyz(self, x=None, y=None, z=None):
-        for val, idx in [(x,0),(y,1),(z,2)]:
-            if val is not None:
-                self.send_raw(f"PTP {idx}, {val}")
+    def mov(self, axis_label, position):
+        """PTP absolute move"""
+        idx = AXIS_IDX[axis_label]
+        self.send_raw(f"PTP {idx}, {position}")
 
     def mov_relative(self, axis_label, delta):
-        idx = {"X":0,"Y":1,"Z":2}.get(axis_label, 0)
-        cur = self._parse_val(self.query_raw(f"?FPOS{idx}"))
+        """query pos แล้ว PTP ไป pos+delta"""
+        idx = AXIS_IDX[axis_label]
+        cur = self.pos_axis(axis_label)
         self.send_raw(f"PTP {idx}, {cur + delta}")
 
+    def mov_xyz(self, x, y, z):
+        """move ทุก axis"""
+        self.send_raw(f"PTP 0, {x}")
+        self.send_raw(f"PTP 1, {y}")
+        self.send_raw(f"PTP 2, {z}")
+
+    def vel(self, axis_label, v):
+        """VEL(axis) = v"""
+        idx = AXIS_IDX[axis_label]
+        self.send_raw(f"VEL({idx}) = {v}")
+
     def vel_all(self, v):
-        for idx in self.AXES:
-            self.send_raw(f"VEL({idx}) = {v}")
+        for label in AXIS_IDX:
+            self.vel(label, v)
 
-    def halt(self):
-        for idx in self.AXES:
+    def kill(self, axis_label):
+        """KILL — หยุดทันที + ล้าง queue"""
+        idx = AXIS_IDX[axis_label]
+        self.send_raw(f"KILL {idx}")
+
+    def kill_all(self):
+        self.send_raw("KILL ALL")
+
+    def halt(self, axis_label):
+        idx = AXIS_IDX[axis_label]
+        self.send_raw(f"HALT {idx}")
+
+    def halt_all(self):
+        for label in AXIS_IDX:
+            idx = AXIS_IDX[label]
             self.send_raw(f"HALT {idx}")
-
-    def home(self):
-        for idx in self.AXES:
-            self.send_raw(f"PTP {idx}, 0")
-
-    def frf(self):
-        for idx in self.AXES:
-            self.send_raw(f"HOME {idx}")
 
 
 # ══════════════════════════════════════════════
@@ -161,14 +179,32 @@ class ConnectWorker(QThread):
 class MoveWorker(QThread):
     finished = pyqtSignal()
     error    = pyqtSignal(str)
-    def __init__(self, drv, fn, vel=1.0):
+    def __init__(self, drv, axis, delta=None, absolute=None, vel=1.0):
         super().__init__()
-        self._drv = drv; self._fn = fn; self._vel = vel
+        self._drv = drv; self._axis = axis
+        self._delta = delta; self._abs = absolute; self._vel = vel
+    def run(self):
+        try:
+            self._drv.vel(self._axis, self._vel)
+            if self._abs is not None:
+                self._drv.mov(self._axis, self._abs)
+            else:
+                self._drv.mov_relative(self._axis, self._delta)
+            self.finished.emit()
+        except Exception as e:
+            self.error.emit(str(e))
+
+
+class MoveXYZWorker(QThread):
+    finished = pyqtSignal()
+    error    = pyqtSignal(str)
+    def __init__(self, drv, x, y, z, vel=1.0):
+        super().__init__()
+        self._drv = drv; self._x=x; self._y=y; self._z=z; self._vel=vel
     def run(self):
         try:
             self._drv.vel_all(self._vel)
-            self._fn()
-            # fire and forget — ไม่ wait_target
+            self._drv.mov_xyz(self._x, self._y, self._z)
             self.finished.emit()
         except Exception as e:
             self.error.emit(str(e))
@@ -196,7 +232,8 @@ class PosCard(QFrame):
         unit = lbl("mm","#2a3444",10)
         h.addWidget(ax); h.addWidget(self._val,1); h.addWidget(unit)
 
-    def set_value(self, v): self._val.setText(f"{v:.4f}")
+    def set_value(self, v):
+        self._val.setText(f"{v:.4f}")
 
 
 # ══════════════════════════════════════════════
@@ -273,7 +310,7 @@ class CartesianPanel(QWidget):
             f'<span style="color:{color};">[{ts}]</span> '
             f'<span style="color:#8892a4;">{msg}</span>')
 
-    def _vl(self):
+    def _vline(self):
         f = QFrame(); f.setFrameShape(QFrame.Shape.VLine)
         f.setStyleSheet("color:#1e2433;"); f.setFixedWidth(1); return f
 
@@ -286,36 +323,38 @@ class CartesianPanel(QWidget):
         v = QVBoxLayout(card); v.setContentsMargins(12,10,12,10); v.setSpacing(8)
 
         row = QHBoxLayout(); row.setSpacing(10)
-        for attr, lbl_txt, default, w in [
-            ("ip_edit",   "IP Address", "192.168.1.10", 2),
-            ("port_edit", "Port",       "50000",        1),
+        for attr, label, default in [
+            ("ip_edit",   "IP Address", "192.168.1.10"),
+            ("port_edit", "Port",       "701"),
         ]:
-            f  = QFrame(); fv = QVBoxLayout(f)
+            f = QFrame(); fv = QVBoxLayout(f)
             fv.setContentsMargins(0,0,0,0); fv.setSpacing(3)
-            fv.addWidget(lbl(lbl_txt,"#4a5568",10))
-            e  = QLineEdit(default)
+            fv.addWidget(lbl(label,"#4a5568",10))
+            e = QLineEdit(default)
             e.setStyleSheet(
                 "border-left:2px solid #4a9eff;background:#161b22;"
                 "border-top:1px solid #1e2433;border-right:1px solid #1e2433;"
                 "border-bottom:1px solid #1e2433;border-radius:4px;"
                 "color:#c5cdd9;padding:5px 8px;font-size:12px;")
-            setattr(self, attr, e); fv.addWidget(e); row.addWidget(f, w)
+            setattr(self, attr, e); fv.addWidget(e)
+            row.addWidget(f, 2 if attr=="ip_edit" else 1)
         v.addLayout(row)
 
-        cr = QHBoxLayout(); cr.setSpacing(10)
+        conn_row = QHBoxLayout(); conn_row.setSpacing(10)
         self.conn_btn = QPushButton("⟳  Connect")
         self.conn_btn.setFixedHeight(30)
         self.conn_btn.setStyleSheet(
             "QPushButton{background:#0d1520;border:1px solid #4a9eff;"
             "border-radius:5px;color:#4a9eff;font-size:12px;font-weight:600;padding:0 14px;}"
-            "QPushButton:hover{background:#4a9eff;color:#000;}"
-            "QPushButton:disabled{border-color:#1e2433;color:#2a3444;background:#0a0c10;}")
+            "QPushButton:hover{background:#4a9eff;color:#000;}")
         self.conn_btn.clicked.connect(self._connect)
         self.status_lbl = lbl("○  Disconnected","#4a5568",12)
         self.idn_lbl    = lbl("IDN: —","#2a3444",11)
-        cr.addWidget(self.conn_btn); cr.addWidget(self.status_lbl)
-        cr.addStretch(); cr.addWidget(self.idn_lbl)
-        v.addLayout(cr)
+        conn_row.addWidget(self.conn_btn)
+        conn_row.addWidget(self.status_lbl)
+        conn_row.addStretch()
+        conn_row.addWidget(self.idn_lbl)
+        v.addLayout(conn_row)
         layout.addWidget(card)
 
     # ── Position ──────────────────────────────
@@ -383,19 +422,6 @@ class CartesianPanel(QWidget):
             "QFrame{background:#0a0c10;border:1px solid #1e2433;border-radius:6px;}")
         cv = QVBoxLayout(ctrl_w); cv.setContentsMargins(12,8,12,8); cv.setSpacing(7)
 
-        # Mode
-        mr = QHBoxLayout(); mr.setSpacing(6)
-        mr.addWidget(lbl("Mode","#4a5568",10))
-        self._mode_step = QPushButton("Step")
-        self._mode_cont = QPushButton("Continuous")
-        for b in [self._mode_step, self._mode_cont]:
-            b.setFixedHeight(26); b.setStyleSheet(self._MODE_OFF)
-        self._mode_step.setStyleSheet(self._MODE_ON)
-        self._mode_step.clicked.connect(lambda: self._set_mode("Step"))
-        self._mode_cont.clicked.connect(lambda: self._set_mode("Continuous"))
-        mr.addWidget(self._mode_step); mr.addWidget(self._mode_cont); mr.addStretch()
-        cv.addLayout(mr)
-
         # Step
         sr = QHBoxLayout(); sr.setSpacing(6)
         sr.addWidget(lbl("Step","#4a5568",10))
@@ -445,7 +471,7 @@ class CartesianPanel(QWidget):
         jog_row.addWidget(ctrl_w, 1)
         layout.addLayout(jog_row)
 
-        # Connect buttons
+        # Connect jog buttons
         self._jog_up.clicked.connect(   lambda: self._jog("Y", 1))
         self._jog_down.clicked.connect( lambda: self._jog("Y",-1))
         self._jog_left.clicked.connect( lambda: self._jog("X",-1))
@@ -487,25 +513,19 @@ class CartesianPanel(QWidget):
         # Quick commands
         cmd_row = QHBoxLayout(); cmd_row.setSpacing(6)
         for label, fn, color in [
-            ("POS?",  self._pos_cmd, "#4a9eff"),
-            ("Home",  self._home,    "#4a9eff"),
-            ("FRF",   self._frf,     "#4a9eff"),
-            ("ONT?",  self._ont,     "#4a9eff"),
-            ("ERR?",  self._err,     "#4a9eff"),
+            ("POS?",     self._pos_cmd,  "#4a9eff"),
+            ("ERR?",     self._err_cmd,  "#4a9eff"),
+            ("KILL ALL", self._kill_all, "#ef4444"),
         ]:
             b = QPushButton(label); b.setFixedHeight(28)
+            is_kill = "KILL" in label
             b.setStyleSheet(
-                f"QPushButton{{background:#161b22;border:1px solid #1e2433;"
+                f"QPushButton{{background:{'#1a0000' if is_kill else '#161b22'};"
+                f"border:1px solid {'#3d0a0a' if is_kill else '#1e2433'};"
                 f"border-radius:4px;color:#4a5568;font-size:11px;padding:0 10px;}}"
                 f"QPushButton:hover{{border-color:{color};color:{color};}}")
             b.clicked.connect(fn); cmd_row.addWidget(b)
-        halt_btn = QPushButton("HALT"); halt_btn.setFixedHeight(28)
-        halt_btn.setStyleSheet(
-            "QPushButton{background:#1a0000;border:1px solid #3d0a0a;"
-            "border-radius:4px;color:#4a5568;font-size:11px;font-weight:600;padding:0 12px;}"
-            "QPushButton:hover{border-color:#ef4444;color:#ef4444;background:#3d0a0a;}")
-        halt_btn.clicked.connect(self._halt)
-        cmd_row.addWidget(halt_btn); cmd_row.addStretch()
+        cmd_row.addStretch()
         v.addLayout(cmd_row)
         layout.addWidget(card)
 
@@ -514,7 +534,7 @@ class CartesianPanel(QWidget):
         self._sh(layout,"COMMAND CONSOLE")
         row = QHBoxLayout(); row.setSpacing(6)
         self._cmd_edit = QLineEdit()
-        self._cmd_edit.setPlaceholderText("Type GCS command...")
+        self._cmd_edit.setPlaceholderText("Type ACS command...")
         self._cmd_edit.setStyleSheet(
             "background:#0a0c10;border:1px solid #1e2433;border-radius:4px;"
             "color:#c5cdd9;padding:6px 10px;font-size:12px;font-family:Consolas,monospace;")
@@ -528,8 +548,8 @@ class CartesianPanel(QWidget):
         send_btn.clicked.connect(self._send_cmd)
         row.addWidget(self._cmd_edit,1); row.addWidget(send_btn)
         layout.addLayout(row)
-        self._ac = QListWidget()
-        self._ac.setFixedHeight(64)
+
+        self._ac = QListWidget(); self._ac.setFixedHeight(64)
         self._ac.setStyleSheet(
             "QListWidget{background:#0a0c10;border:1px solid #1e2433;border-radius:4px;"
             "color:#8892a4;font-size:11px;font-family:Consolas,monospace;}"
@@ -542,8 +562,8 @@ class CartesianPanel(QWidget):
     # ── Log ───────────────────────────────────
     def _build_log(self, layout):
         self._sh(layout,"RESPONSE LOG")
-        self._log = QTextEdit()
-        self._log.setReadOnly(True); self._log.setFixedHeight(80)
+        self._log = QTextEdit(); self._log.setReadOnly(True)
+        self._log.setFixedHeight(80)
         self._log.setStyleSheet(
             "QTextEdit{background:#0a0c10;border:1px solid #1e2433;border-radius:5px;"
             "color:#4a5568;font-size:11px;font-family:Consolas,monospace;}")
@@ -552,7 +572,7 @@ class CartesianPanel(QWidget):
     # ── Connect ───────────────────────────────
     def _connect(self):
         ip   = self.ip_edit.text().strip()
-        port = int(self.port_edit.text() or 50000)
+        port = int(self.port_edit.text() or 701)
         if not ip:
             self.status_lbl.setText("✗  Enter IP")
             self.status_lbl.setStyleSheet("color:#ef4444;font-size:12px;"); return
@@ -570,7 +590,8 @@ class CartesianPanel(QWidget):
         self.status_lbl.setStyleSheet("color:#22c55e;font-size:12px;font-weight:600;")
         self.idn_lbl.setText(f"IDN: {idn}")
         self.idn_lbl.setStyleSheet("color:#8892a4;font-size:11px;")
-        self.conn_btn.setText("✗  Disconnect"); self.conn_btn.setEnabled(True)
+        self.conn_btn.setText("✗  Disconnect")
+        self.conn_btn.setEnabled(True)
         self.conn_btn.clicked.disconnect()
         self.conn_btn.clicked.connect(self._disconnect)
         self._log_msg(f"Connected → {idn}")
@@ -615,22 +636,18 @@ class CartesianPanel(QWidget):
         self._vel = val
         self._vel_edit.setText(f"{val:.3f}")
 
-    def _set_mode(self, mode):
-        self._mode_step.setStyleSheet(
-            self._MODE_ON  if mode=="Step"       else self._MODE_OFF)
-        self._mode_cont.setStyleSheet(
-            self._MODE_ON  if mode=="Continuous" else self._MODE_OFF)
-
     def _jog(self, axis, direction):
         if not self._drv:
             self._log_msg("Not connected","#ef4444"); return
         delta = direction * self._step
-        self._log_msg(f"JOG {axis} {'+' if delta>0 else ''}{delta:.4f} mm")
-        fn = lambda: self._drv.mov_relative(axis, delta)
-        worker = MoveWorker(self._drv, fn, self._vel)
+        self._log_msg(f"JOG {axis} {'+' if delta>0 else ''}{delta:.4f}")
+        # KILL ก่อน ล้าง queue แล้วค่อย move
+        self._drv.kill(axis)
+        worker = MoveWorker(self._drv, axis, delta=delta, vel=self._vel)
         worker.finished.connect(self._refresh_pos)
         worker.error.connect(lambda e: self._log_msg(e,"#ef4444"))
-        worker.start(); self._jog_worker = worker
+        worker.start()
+        self._jog_worker = worker
 
     # ── Go to XYZ ─────────────────────────────
     def _goto_xyz(self):
@@ -642,12 +659,12 @@ class CartesianPanel(QWidget):
             z = float(self._goto["Z"].text())
         except:
             self._log_msg("Invalid position","#ef4444"); return
-        self._log_msg(f"MOV X={x:.3f} Y={y:.3f} Z={z:.3f}")
-        fn = lambda: self._drv.mov_xyz(x, y, z)
-        worker = MoveWorker(self._drv, fn, self._vel)
+        self._log_msg(f"PTP X={x:.3f} Y={y:.3f} Z={z:.3f}")
+        worker = MoveXYZWorker(self._drv, x, y, z, self._vel)
         worker.finished.connect(self._refresh_pos)
         worker.error.connect(lambda e: self._log_msg(e,"#ef4444"))
-        worker.start(); self._goto_worker = worker
+        worker.start()
+        self._goto_worker = worker
 
     # ── Quick commands ────────────────────────
     def _pos_cmd(self):
@@ -659,32 +676,16 @@ class CartesianPanel(QWidget):
             self._refresh_pos()
         except Exception as e: self._log_msg(str(e),"#ef4444")
 
-    def _home(self):
-        if not self._drv: return
-        self._log_msg("Home → X=0 Y=0 Z=0")
-        worker = MoveWorker(self._drv, self._drv.home, self._vel)
-        worker.finished.connect(self._refresh_pos)
-        worker.error.connect(lambda e: self._log_msg(e,"#ef4444"))
-        worker.start(); self._home_worker = worker
-
-    def _frf(self):
-        if not self._drv: return
-        try: self._drv.frf(); self._log_msg("FRF — Referencing...")
-        except Exception as e: self._log_msg(str(e),"#ef4444")
-
-    def _ont(self):
-        if not self._drv: return
-        try: self._log_msg(f"ONT? → {self._drv.ont()}")
-        except Exception as e: self._log_msg(str(e),"#ef4444")
-
-    def _err(self):
+    def _err_cmd(self):
         if not self._drv: return
         try: self._log_msg(f"ERR? → {self._drv.err()}")
         except Exception as e: self._log_msg(str(e),"#ef4444")
 
-    def _halt(self):
+    def _kill_all(self):
         if not self._drv: return
-        try: self._drv.halt(); self._log_msg("HALT","#ef4444")
+        try:
+            self._drv.kill_all()
+            self._log_msg("KILL ALL","#ef4444")
         except Exception as e: self._log_msg(str(e),"#ef4444")
 
     # ── Console ───────────────────────────────
@@ -701,7 +702,7 @@ class CartesianPanel(QWidget):
         if not self._drv:
             self._log_msg("Not connected","#ef4444"); return
         try:
-            if cmd.strip().endswith("?") or cmd.strip().startswith("*"):
+            if cmd.startswith("?"):
                 resp = self._drv.query_raw(cmd)
                 self._log_msg(f"{cmd} → {resp}")
             else:
@@ -715,18 +716,15 @@ class CartesianPanel(QWidget):
     def get_settings(self):
         return {
             "ip":       self.ip_edit.text().strip(),
-            "port":     int(self.port_edit.text() or 50000),
+            "port":     int(self.port_edit.text() or 701),
             "step":     self._step,
             "velocity": self._vel,
         }
 
     def load_settings(self, data):
         self.ip_edit.setText(data.get("ip",""))
-        self.port_edit.setText(str(data.get("port",50000)))
+        self.port_edit.setText(str(data.get("port",701)))
         self._step = data.get("step",0.010)
         self._step_edit.setText(f"{self._step:.4f}")
         self._vel  = data.get("velocity",1.0)
         self._vel_edit.setText(f"{self._vel:.3f}")
-
-    def set_cart_driver(self, drv):
-        self._drv = drv
