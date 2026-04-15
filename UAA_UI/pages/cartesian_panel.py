@@ -176,6 +176,7 @@ class ConnectWorker(QThread):
 
 
 class MoveWorker(QThread):
+    """fire and forget — ส่ง command แล้วจบ ไม่ block"""
     finished = pyqtSignal()
     error    = pyqtSignal(str)
     def __init__(self, drv, axis, delta=None, absolute=None, vel=1.0):
@@ -195,6 +196,7 @@ class MoveWorker(QThread):
 
 
 class MoveXYZWorker(QThread):
+    """fire and forget — ส่ง command แล้วจบ ไม่ block"""
     finished = pyqtSignal()
     error    = pyqtSignal(str)
     def __init__(self, drv, x, y, z, vel=1.0):
@@ -207,6 +209,19 @@ class MoveXYZWorker(QThread):
             self.finished.emit()
         except Exception as e:
             self.error.emit(str(e))
+
+
+class PollWorker(QThread):
+    """poll position ใน background ไม่ block UI"""
+    result = pyqtSignal(dict)
+    def __init__(self, drv):
+        super().__init__()
+        self._drv = drv
+    def run(self):
+        try:
+            pos = self._drv.pos()
+            self.result.emit(pos)
+        except: pass
 
 
 # ══════════════════════════════════════════════
@@ -471,12 +486,12 @@ class CartesianPanel(QWidget):
         layout.addLayout(jog_row)
 
         # Connect jog buttons
-        self._jog_up.clicked.connect(   lambda: self._jog("Y", 1))
-        self._jog_down.clicked.connect( lambda: self._jog("Y",-1))
+        self._jog_up.clicked.connect(   lambda: self._jog("Z", 1))
+        self._jog_down.clicked.connect( lambda: self._jog("Z",-1))
         self._jog_left.clicked.connect( lambda: self._jog("X",-1))
         self._jog_right.clicked.connect(lambda: self._jog("X", 1))
-        self._jog_zup.clicked.connect(  lambda: self._jog("Z", 1))
-        self._jog_zdown.clicked.connect(lambda: self._jog("Z",-1))
+        self._jog_zup.clicked.connect(  lambda: self._jog("Y", 1))
+        self._jog_zdown.clicked.connect(lambda: self._jog("Y",-1))
 
     # ── Go to ─────────────────────────────────
     def _build_goto(self, layout):
@@ -617,12 +632,16 @@ class CartesianPanel(QWidget):
     # ── Position ──────────────────────────────
     def _refresh_pos(self):
         if not self._drv: return
-        try:
-            pos = self._drv.pos()
-            for ax, val in pos.items():
-                if ax in self._pos_cards:
-                    self._pos_cards[ax].set_value(val)
-        except: pass
+        if hasattr(self, '_poll_worker') and self._poll_worker.isRunning():
+            return
+        self._poll_worker = PollWorker(self._drv)
+        self._poll_worker.result.connect(self._on_pos_result)
+        self._poll_worker.start()
+
+    def _on_pos_result(self, pos):
+        for ax, val in pos.items():
+            if ax in self._pos_cards:
+                self._pos_cards[ax].set_value(val)
 
     # ── Jog ───────────────────────────────────
     def _on_step_combo(self, label):
