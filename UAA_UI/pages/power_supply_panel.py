@@ -72,12 +72,12 @@ class PSUDriver:
         return data.decode().strip()
 
     def idn(self):               return self.query("*IDN?")
-    def set_voltage(self,ch,v):  self.send(f"INST:NSEL {ch}"); self.send(f"VOLT {v}")
-    def set_current(self,ch,i):  self.send(f"INST:NSEL {ch}"); self.send(f"CURR {i}")
-    def output_on(self,ch):      self.send(f"INST:NSEL {ch}"); self.send("OUTP ON")
-    def output_off(self,ch):     self.send(f"INST:NSEL {ch}"); self.send("OUTP OFF")
-    def measure_v(self,ch):      self.send(f"INST:NSEL {ch}"); return float(self.query("MEAS:VOLT?"))
-    def measure_i(self,ch):      self.send(f"INST:NSEL {ch}"); return float(self.query("MEAS:CURR?"))
+    def set_voltage(self,ch,v):  self.send(f"VOLT {v},(@{ch})")
+    def set_current(self,ch,i):  self.send(f"CURR {i},(@{ch})")
+    def output_on(self,ch):      self.send(f"OUTP ON,(@{ch})")
+    def output_off(self,ch):     self.send(f"OUTP OFF,(@{ch})")
+    def measure_v(self,ch):      return float(self.query(f"MEAS:VOLT? (@{ch})"))
+    def measure_i(self,ch):      return float(self.query(f"MEAS:CURR? (@{ch})"))
 
 
 class ConnectWorker(QThread):
@@ -94,24 +94,24 @@ class ConnectWorker(QThread):
 
 
 class ReadbackWorker(QThread):
-    """อ่าน V/I ใน background thread ไม่ block UI"""
-    result = pyqtSignal(int, float, float)  # ch, voltage, current
-    error  = pyqtSignal(int)
+    """อ่าน V/I ทุก channel ใน thread เดียว ตามลำดับ"""
+    result = pyqtSignal(int, float, float)
 
-    def __init__(self, drv_ref, ch):
+    def __init__(self, drv_ref, ch_rows):
         super().__init__()
-        self._drv = drv_ref
-        self._ch  = ch
+        self._drv     = drv_ref
+        self._ch_rows = ch_rows
 
     def run(self):
         drv = self._drv[0]
         if not drv: return
-        try:
-            v = drv.measure_v(self._ch)
-            i = drv.measure_i(self._ch)
-            self.result.emit(self._ch, v, i)
-        except:
-            self.error.emit(self._ch)
+        for r in self._ch_rows:
+            if not r._on: continue
+            try:
+                v = drv.measure_v(r._ch)
+                i = drv.measure_i(r._ch)
+                self.result.emit(r._ch, v, i)
+            except: pass
 
 
 class ChannelRow(QFrame):
@@ -193,13 +193,7 @@ class ChannelRow(QFrame):
             drv.set_current(self._ch,float(self.i_edit.text()))
         except Exception as e: print(f"[PSU ch{self._ch}] apply: {e}")
 
-    def update_readback(self):
-        drv=self._drv[0]
-        if not drv or not self._on: return
-        try:
-            self.rv.setText(f"{drv.measure_v(self._ch):.3f} V")
-            self.ri.setText(f"{drv.measure_i(self._ch):.4f} A")
-        except: pass
+
 
 
 class SinglePSUWidget(QWidget):
@@ -363,16 +357,13 @@ class SinglePSUWidget(QWidget):
         self._img_worker = worker   # keep reference
 
     def _readback(self):
-        """รัน readback ใน background thread แยกต่างหาก"""
+        """spawn ReadbackWorker ตัวเดียว อ่านทุก channel ตามลำดับ"""
         if not self._drv[0]: return
-        for r in self._ch_rows:
-            if not r._on: continue
-            worker = ReadbackWorker(self._drv, r._ch)
-            worker.result.connect(self._on_readback_result)
-            worker.error.connect(lambda ch: None)
-            worker.start()
-            self._rb_workers = getattr(self, '_rb_workers', [])
-            self._rb_workers.append(worker)
+        if hasattr(self, '_rb_worker') and self._rb_worker.isRunning():
+            return  # รอ round ก่อนเสร็จก่อน ไม่ spawn ซ้อน
+        self._rb_worker = ReadbackWorker(self._drv, self._ch_rows)
+        self._rb_worker.result.connect(self._on_readback_result)
+        self._rb_worker.start()
 
     def _on_readback_result(self, ch, v, i):
         """รับผลจาก background thread แล้ว update UI"""
