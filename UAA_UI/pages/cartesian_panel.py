@@ -731,6 +731,16 @@ class CartesianPanel(QWidget):
         self._cmd_edit.clear(); self._ac.setVisible(False)
 
     # ── Save / Load ───────────────────────────
+    def closeEvent(self, event):
+        """หยุด timer และรอ worker ก่อน destroy"""
+        self._pos_timer.stop()
+        for attr in ['_poll_worker','_jog_worker','_goto_worker']:
+            w = getattr(self, attr, None)
+            if w and w.isRunning():
+                w.quit()
+                w.wait(2000)
+        super().closeEvent(event)
+
     def get_settings(self):
         return {
             "ip":       self.ip_edit.text().strip(),

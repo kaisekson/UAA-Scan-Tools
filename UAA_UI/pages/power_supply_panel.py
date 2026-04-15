@@ -373,6 +373,14 @@ class SinglePSUWidget(QWidget):
                 r.ri.setText(f"{i:.4f} A")
                 break
 
+    def closeEvent(self, event):
+        """หยุด timer และรอ worker ก่อน destroy"""
+        self._timer.stop()
+        if hasattr(self, '_rb_worker') and self._rb_worker.isRunning():
+            self._rb_worker.quit()
+            self._rb_worker.wait(2000)
+        super().closeEvent(event)
+
     def get_settings(self):
         """คืน dict ของ settings ตัวนี้"""
         return {
