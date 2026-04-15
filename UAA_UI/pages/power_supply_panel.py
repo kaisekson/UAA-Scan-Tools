@@ -81,15 +81,37 @@ class PSUDriver:
 
 
 class ConnectWorker(QThread):
-    success = pyqtSignal(str)
+    success = pyqtSignal(str, object)
     failed  = pyqtSignal(str)
     def __init__(self,ip,port,timeout):
         super().__init__(); self.ip=ip; self.port=port; self.timeout=timeout
     def run(self):
         try:
             drv=PSUDriver(self.ip,self.port,self.timeout); drv.connect()
-            idn=drv.idn(); drv.disconnect(); self.success.emit(idn)
+            idn=drv.idn()
+            self.success.emit(idn, drv)
         except Exception as e: self.failed.emit(str(e))
+
+
+class ReadbackWorker(QThread):
+    """อ่าน V/I ใน background thread ไม่ block UI"""
+    result = pyqtSignal(int, float, float)  # ch, voltage, current
+    error  = pyqtSignal(int)
+
+    def __init__(self, drv_ref, ch):
+        super().__init__()
+        self._drv = drv_ref
+        self._ch  = ch
+
+    def run(self):
+        drv = self._drv[0]
+        if not drv: return
+        try:
+            v = drv.measure_v(self._ch)
+            i = drv.measure_i(self._ch)
+            self.result.emit(self._ch, v, i)
+        except:
+            self.error.emit(self._ch)
 
 
 class ChannelRow(QFrame):
@@ -284,11 +306,8 @@ class SinglePSUWidget(QWidget):
         self._worker=ConnectWorker(ip,int(self.port_edit.text() or 5025),float(self.tmo_edit.text() or 3))
         self._worker.success.connect(self._on_ok); self._worker.failed.connect(self._on_fail); self._worker.start()
 
-    def _on_ok(self,idn):
-        ip=self.ip_edit.text().strip()
-        drv=PSUDriver(ip,int(self.port_edit.text() or 5025),float(self.tmo_edit.text() or 3))
-        try: drv.connect(); self._drv[0]=drv
-        except: pass
+    def _on_ok(self,idn,drv):
+        self._drv[0]=drv
         self.status_lbl.setText("●  Connected"); self.status_lbl.setStyleSheet("color:#22c55e;font-size:12px;font-weight:600;")
         self.idn_lbl.setText(f"IDN: {idn}"); self.idn_lbl.setStyleSheet("color:#8892a4;font-size:11px;")
         self.conn_btn.setText("✗  Disconnect"); self.conn_btn.setEnabled(True)
@@ -344,7 +363,24 @@ class SinglePSUWidget(QWidget):
         self._img_worker = worker   # keep reference
 
     def _readback(self):
-        for r in self._ch_rows: r.update_readback()
+        """รัน readback ใน background thread แยกต่างหาก"""
+        if not self._drv[0]: return
+        for r in self._ch_rows:
+            if not r._on: continue
+            worker = ReadbackWorker(self._drv, r._ch)
+            worker.result.connect(self._on_readback_result)
+            worker.error.connect(lambda ch: None)
+            worker.start()
+            self._rb_workers = getattr(self, '_rb_workers', [])
+            self._rb_workers.append(worker)
+
+    def _on_readback_result(self, ch, v, i):
+        """รับผลจาก background thread แล้ว update UI"""
+        for r in self._ch_rows:
+            if r._ch == ch:
+                r.rv.setText(f"{v:.3f} V")
+                r.ri.setText(f"{i:.4f} A")
+                break
 
     def get_settings(self):
         """คืน dict ของ settings ตัวนี้"""
