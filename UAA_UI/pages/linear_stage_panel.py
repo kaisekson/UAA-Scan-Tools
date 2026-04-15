@@ -123,9 +123,8 @@ class StageDriver:
         self.send_raw(f"PTP {self._axis}, {pos}")
 
     def mov_relative(self, delta):
-        """PTP relative move — query pos ก่อนแล้วบวก delta"""
-        cur = self.pos()
-        self.send_raw(f"PTP {self._axis}, {cur + delta}")
+        """PTP/r relative move — controller คำนวณ relative เอง ไม่ต้อง query pos"""
+        self.send_raw(f"PTP/r {self._axis}, {delta}")
 
     def vel(self, v):
         """Set velocity VEL(axis) = v"""

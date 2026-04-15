@@ -119,10 +119,9 @@ class CartesianDriver:
         self.send_raw(f"PTP {idx}, {position}")
 
     def mov_relative(self, axis_label, delta):
-        """query pos แล้ว PTP ไป pos+delta"""
+        """PTP/r relative move — controller คำนวณ relative เอง ไม่ต้อง query pos"""
         idx = AXIS_IDX[axis_label]
-        cur = self.pos_axis(axis_label)
-        self.send_raw(f"PTP {idx}, {cur + delta}")
+        self.send_raw(f"PTP/r {idx}, {delta}")
 
     def mov_xyz(self, x, y, z):
         """move ทุก axis"""

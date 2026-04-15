@@ -34,8 +34,9 @@ except ImportError:
 # ══════════════════════════════════════════════
 
 class WAGODriver:
-    def __init__(self, ip, port=502, unit=1):
+    def __init__(self, ip, port=502, unit=1, do_read_offset=512):
         self.ip=ip; self.port=port; self.unit=unit
+        self.do_read_offset = do_read_offset
         self._client=None
 
     def connect(self):
@@ -58,8 +59,8 @@ class WAGODriver:
         return list(r.bits[:count])
 
     def read_do(self, addr, count=1):
-        """อ่าน DO state — Read Coil (0x)"""
-        r = self._client.read_coils(addr-1, count, unit=self.unit)
+        """อ่าน DO state — Read Coil (0x) ด้วย offset"""
+        r = self._client.read_coils(addr - 1 + self.do_read_offset, count, unit=self.unit)
         if r.isError(): return [False]*count
         return list(r.bits[:count])
 
@@ -71,12 +72,13 @@ class WAGODriver:
 class ConnectWorker(QThread):
     success = pyqtSignal()
     failed  = pyqtSignal(str)
-    def __init__(self, ip, port, unit):
+    def __init__(self, ip, port, unit, do_read_offset=512):
         super().__init__()
         self.ip=ip; self.port=port; self.unit=unit
+        self.do_read_offset=do_read_offset
     def run(self):
         try:
-            d = WAGODriver(self.ip, self.port, self.unit)
+            d = WAGODriver(self.ip, self.port, self.unit, self.do_read_offset)
             d.connect(); d.disconnect()
             self.success.emit()
         except Exception as e: self.failed.emit(str(e))
@@ -494,9 +496,10 @@ class WAGOIOPanel(QWidget):
 
         grid = QHBoxLayout(); grid.setSpacing(10)
         for attr, lbl_txt, default, w in [
-            ("ip_edit",   "IP Address", "192.168.1.50", 3),
-            ("port_edit", "Port",       "502",          1),
-            ("unit_edit", "Unit ID",    "1",            1),
+            ("ip_edit",     "IP Address",     "192.168.1.50", 3),
+            ("port_edit",   "Port",           "502",          1),
+            ("unit_edit",   "Unit ID",        "1",            1),
+            ("offset_edit", "DO Read Offset", "512",          1),
         ]:
             f  = QFrame(); fv = QVBoxLayout(f)
             fv.setContentsMargins(0,0,0,0); fv.setSpacing(3)
@@ -585,25 +588,27 @@ class WAGOIOPanel(QWidget):
 
     # ── Connect ───────────────────────────────
     def _connect(self):
-        ip   = self.ip_edit.text().strip()
-        port = int(self.port_edit.text() or 502)
-        unit = int(self.unit_edit.text() or 1)
+        ip     = self.ip_edit.text().strip()
+        port   = int(self.port_edit.text() or 502)
+        unit   = int(self.unit_edit.text() or 1)
+        offset = int(self.offset_edit.text() or 512)
         if not ip:
             self.status_lbl.setText("✗  Enter IP")
             self.status_lbl.setStyleSheet("color:#ef4444;font-size:12px;"); return
         self.conn_btn.setEnabled(False)
         self.status_lbl.setText("○  Connecting...")
         self.status_lbl.setStyleSheet("color:#eab308;font-size:12px;")
-        self._worker = ConnectWorker(ip, port, unit)
+        self._worker = ConnectWorker(ip, port, unit, offset)
         self._worker.success.connect(self._on_ok)
         self._worker.failed.connect(self._on_fail)
         self._worker.start()
 
     def _on_ok(self):
-        ip   = self.ip_edit.text().strip()
-        port = int(self.port_edit.text() or 502)
-        unit = int(self.unit_edit.text() or 1)
-        drv  = WAGODriver(ip, port, unit)
+        ip     = self.ip_edit.text().strip()
+        port   = int(self.port_edit.text() or 502)
+        unit   = int(self.unit_edit.text() or 1)
+        offset = int(self.offset_edit.text() or 512)
+        drv    = WAGODriver(ip, port, unit, offset)
         try: drv.connect(); self._drv[0] = drv
         except Exception as e:
             self._log_msg(str(e),"#ef4444"); return
@@ -654,10 +659,11 @@ class WAGOIOPanel(QWidget):
             self,"Save IO Config", default, "JSON (*.json)")
         if not path: return
         data = {
-            "ip":   self.ip_edit.text().strip(),
-            "port": int(self.port_edit.text() or 502),
-            "unit": int(self.unit_edit.text() or 1),
-            "poll_interval": int(self.poll_edit.text() or 500),
+            "ip":             self.ip_edit.text().strip(),
+            "port":           int(self.port_edit.text() or 502),
+            "unit":           int(self.unit_edit.text() or 1),
+            "do_read_offset": int(self.offset_edit.text() or 512),
+            "poll_interval":  int(self.poll_edit.text() or 500),
             "do": self._do_box.get_config(),
             "di": self._di_box.get_config(),
         }
@@ -685,6 +691,7 @@ class WAGOIOPanel(QWidget):
             self.ip_edit.setText(data.get("ip",""))
             self.port_edit.setText(str(data.get("port",502)))
             self.unit_edit.setText(str(data.get("unit",1)))
+            self.offset_edit.setText(str(data.get("do_read_offset",512)))
             self.poll_edit.setText(str(data.get("poll_interval",500)))
             do_list = data.get("do",[])
             di_list = data.get("di",[])
