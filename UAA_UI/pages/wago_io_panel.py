@@ -54,19 +54,19 @@ class WAGODriver:
 
     def read_di(self, addr, count=1):
         """อ่าน DI — Discrete Input (coil read 1x)"""
-        r = self._client.read_discrete_inputs(addr-1, count, unit=self.unit)
+        r = self._client.read_discrete_inputs(addr-1, count, slave=self.unit)
         if r.isError(): return [False]*count
         return list(r.bits[:count])
 
     def read_do(self, addr, count=1):
         """อ่าน DO state — Read Coil (0x) ด้วย offset"""
-        r = self._client.read_coils(addr - 1 + self.do_read_offset, count, unit=self.unit)
+        r = self._client.read_coils(addr - 1 + self.do_read_offset, count, slave=self.unit)
         if r.isError(): return [False]*count
         return list(r.bits[:count])
 
     def write_do(self, addr, state):
         """เขียน DO — Write Single Coil"""
-        self._client.write_coil(addr-1, state, unit=self.unit)
+        self._client.write_coil(addr-1, state, slave=self.unit)
 
 
 class ConnectWorker(QThread):
