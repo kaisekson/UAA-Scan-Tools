@@ -486,12 +486,12 @@ class CartesianPanel(QWidget):
         layout.addLayout(jog_row)
 
         # Connect jog buttons
-        self._jog_up.clicked.connect(   lambda: self._jog("Z", 1))
-        self._jog_down.clicked.connect( lambda: self._jog("Z",-1))
+        self._jog_up.clicked.connect(   lambda: self._jog("Y",-1))
+        self._jog_down.clicked.connect( lambda: self._jog("Y", 1))
         self._jog_left.clicked.connect( lambda: self._jog("X",-1))
         self._jog_right.clicked.connect(lambda: self._jog("X", 1))
-        self._jog_zup.clicked.connect(  lambda: self._jog("Y", 1))
-        self._jog_zdown.clicked.connect(lambda: self._jog("Y",-1))
+        self._jog_zup.clicked.connect(  lambda: self._jog("Z",-1))
+        self._jog_zdown.clicked.connect(lambda: self._jog("Z", 1))
 
     # ── Go to ─────────────────────────────────
     def _build_goto(self, layout):
