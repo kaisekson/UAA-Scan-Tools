@@ -13,6 +13,7 @@ from pages.wago_io_panel import WAGOIOPanel
 from pages.camera_panel import CameraPanel
 from pages.summary_panel import SummaryPanel
 from pages.tec_panel import TECPanel
+from pages.ccs_lighting_panel import CCSLightingPanel
 from core import settings as cfg
 
 
@@ -120,6 +121,7 @@ class HardwareConfigPage(QWidget):
             ("WAGO I/O",      "#38bdf8", True,  "wago"),
             ("Camera",        "#f472b6", True,  "cam"),
             ("TEC",           "#cba6f7", True,  "tec"),
+            ("CCS Lighting",  "#eab308", True,  "ccs"),
         ]
 
         from PyQt6.QtWidgets import QStackedWidget
@@ -168,6 +170,9 @@ class HardwareConfigPage(QWidget):
             elif use_real and key == "tec":
                 panel = TECPanel()
                 self._tec_panel = panel
+            elif use_real and key == "ccs":
+                panel = CCSLightingPanel()
+                self._ccs_panel = panel
             else:
                 panel = EmptyPanel(name, color)
             self.stack.addWidget(panel)
@@ -214,6 +219,8 @@ class HardwareConfigPage(QWidget):
             self._cam_panel.load_settings(self.data["camera"])
         if "tec" in self.data and self.data["tec"]:
             self._tec_panel.load_settings(self.data["tec"])
+        if "ccs_lighting" in self.data and self.data["ccs_lighting"]:
+            self._ccs_panel.load_settings(self.data["ccs_lighting"])
 
         # Select first tab by default
         if self._tabs:
@@ -236,5 +243,6 @@ class HardwareConfigPage(QWidget):
         self.data["wago"] = self._wago_panel.get_settings()
         self.data["camera"] = self._cam_panel.get_settings()
         self.data["tec"] = self._tec_panel.get_settings()
+        self.data["ccs_lighting"] = self._ccs_panel.get_settings()
         cfg.save(self.data)
         print("[Config] Saved power supply settings")

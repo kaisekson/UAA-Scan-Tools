@@ -167,6 +167,8 @@ class SummaryPanel(QWidget):
             ("smu",   "SMU 2602B",     "📊", "#22c55e"),
             ("wago",  "WAGO I/O",      "🔌", "#38bdf8"),
             ("cam",   "Camera",        "📷", "#f472b6"),
+            ("ccs",   "CCS Lighting",  "💡", "#eab308"),
+            ("tec",   "TEC",           "🌡", "#cba6f7"),
         ]
 
         grid = QGridLayout(); grid.setSpacing(10)
@@ -302,6 +304,22 @@ class SummaryPanel(QWidget):
             connected += 1
         else:
             self._cards["cam"].set_disconnected("Not configured")
+
+        # CCS Lighting
+        ccs = self._settings.get("ccs_lighting", {})
+        if ccs.get("ip",""):
+            self._cards["ccs"].set_connected(ccs.get("ip",""), ccs.get("port", 10001))
+            connected += 1
+        else:
+            self._cards["ccs"].set_disconnected("No IP configured")
+
+        # TEC
+        tec = self._settings.get("tec", {})
+        if tec.get("resource",""):
+            self._cards["tec"].set_connected(extra=tec.get("resource",""))
+            connected += 1
+        else:
+            self._cards["tec"].set_disconnected("No USB resource")
 
         # Update count
         self._conn_count.setText(f"{connected} / {total}")

@@ -170,5 +170,31 @@
   },
   "tec": {
     "resource": ""
+  },
+  "ccs_lighting": {
+    "ip": "192.168.0.10",
+    "port": 10001,
+    "channels": [
+      {
+        "name": "White",
+        "value": 110,
+        "enabled": true
+      },
+      {
+        "name": "Red",
+        "value": 0,
+        "enabled": false
+      },
+      {
+        "name": "Green",
+        "value": 0,
+        "enabled": false
+      },
+      {
+        "name": "Blue",
+        "value": 0,
+        "enabled": false
+      }
+    ]
   }
 }
